@@ -1,0 +1,9 @@
+# Snapshot archive of the upstream source, not part of the tree.
+*.zip
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~

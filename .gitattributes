@@ -1,0 +1,4 @@
+# The game loads these files straight from raw.githubusercontent.com, so keep
+# them LF in the repository and in the working tree (Windows defaults to CRLF).
+* text=auto eol=lf
+*.zip binary
