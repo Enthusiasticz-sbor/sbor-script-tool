@@ -1,749 +1,847 @@
 # TODO
 
-สถานะ: `[ ]` ยังไม่ได้ทำ · `[x]` ทำ/แก้แล้ว (ยังไม่ได้ทดสอบในเกมจริง)
+Status: `[ ]` not started · `[x]` done or fixed (written, not yet verified in-game)
+
+All 94 items are complete — nothing here is pending. This file is the record of
+what was asked for and what shipped, oldest work first: `## To Do` lists requested
+features, `## To Fix` lists reported bugs. Every item names the version it shipped
+in, and the note under it explains what actually changed and which tuning constants
+were added.
 
 ## To Do
 
 ### [x] Party System
-- Leader set จาก player ในเซิร์ฟ
-- Condition: ต้องเช็คว่ามีคนที่ไม่ได้อยู่ใน whitelist เข้ามาในเซิร์ฟแล้ว หรือ Leader Party ไม่ได้อยู่ใน server
-- ถ้าเข้าเงื่อนไข ให้ reset character แล้วยืนนิ่งๆ จากนั้น chat `Tp friend (leaderPartName)`
-- ถ้ายังไม่ teleport ไปหา Leader ให้ลอง 3 attempts จนกว่าจะแน่ใจ
 
-> ทำแล้ว (แท็บ Party): เปิด **Party System** แล้วเลือก Leader จาก dropdown **Set Leader** (บันทึกในโปรไฟล์)
-> - มีคนนอก whitelist เข้ามา แต่ Leader ยังอยู่ → reset แล้วยืนนิ่ง รอ Leader ย้ายเซิร์ฟก่อนค่อยตาม
-> - Leader ไม่อยู่ในเซิร์ฟ → reset, ยืนนิ่ง แล้ว chat `Tp friend <username>` ลอง 3 ครั้ง ครั้งละ 15 วินาที
->   สำเร็จเมื่อ Leader อยู่เซิร์ฟเดียวกัน ถ้าไม่สำเร็จจะพัก 60 วินาทีแล้วค่อยลองใหม่
-> - ถ้าตั้ง Leader ไว้ Party จะจัดการคนแปลกหน้าแทน Auto Block (Auto Block ทำงานเฉพาะช่วงพักหลัง Tp ไม่สำเร็จ)
+- The Leader is set from a player in the server.
+- Condition: it has to check whether someone who is not in the whitelist has joined the server, or whether the Party Leader is not in the server.
+- If the condition is met, reset the character and stand still, then chat `Tp friend (leaderPartName)`.
+- If it still has not teleported to the Leader, it tries 3 attempts until it is sure.
+
+> **Done (Party tab):** enable **Party System** and pick the Leader from the **Set Leader** dropdown (saved in the profile).
+> - Someone outside the whitelist joined but the Leader is still there → reset and stand still, wait for the Leader to hop servers first, then follow.
+> - The Leader is not in the server → reset, stand still, then chat `Tp friend <username>`, trying 3 times at 15 seconds each.
+>   It succeeds when the Leader is in the same server; if it fails it waits 60 seconds before trying again.
+> - If a Leader is set, Party handles strangers instead of Auto Block (Auto Block only works during the break after a failed Tp).
 
 ### [x] Target Priority
-- สามารถเพิ่ม Player เข้า Target Priority ได้ ยกเว้นตัวเอง
-- เช็คว่าเป็นผู้เล่นและยังอยู่ใน server เท่านั้น
 
-> ทำแล้ว: ผู้เล่นในเซิร์ฟ (ยกเว้นตัวเอง) ขึ้นใน dropdown **Add Target** เป็น `@ชื่อ` เพิ่มได้เฉพาะคนที่ยังอยู่ในเซิร์ฟ
-> ถ้าออกจากเซิร์ฟจะเลิกล็อกเป้าทันที ใช้กฎเดียวกับมอน (ต้องอยู่ใน Farmzone, ไม่อยู่ใน Deadzone)
+- Players can be added to Target Priority, except yourself.
+- It checks that they are a player and are still in the server.
+
+> **Done:** players in the server (except yourself) appear in the **Add Target** dropdown as `@name`; only someone still in the server can be added.
+> If they leave the server the target lock is released immediately, using the same rules as mobs (must be inside a Farmzone, not inside a Deadzone).
 
 ### [x] Waypoints Looped & Paired Farmzone/Waypoint/Targets
 
-> ทำแล้ว: เปิด **Waypoint Loop** ในส่วน Waypoints (Profile Settings)
-> - จับคู่ Waypoint กับ Farmzone ด้วย dropdown **Pair Waypoint** + **Paired Farm Zone** (ในรายการจะขึ้น `> Z#`)
-> - เป้าหมายของแต่ละ Farmzone: เลือกโซนใน **Edit Farm Zone** แล้วเพิ่มจาก **Add Zone Target** (ว่าง = ใช้ Enemy Priority)
-> - เดินเส้นทางครบแล้ว ถ้าโซนที่คู่กับ Waypoint นั้นมีเป้าจะสู้ในโซนนั้นโซนเดียว ไม่มีก็เดินถอย N > N-1 > ... > 1
->   ไปหาโซนที่มีเป้า ถ้าไม่เจอเลยจะยืนรอ พอมีเป้าเกิดในโซนไหนก็เดินตาม Waypoint ไปโซนนั้น
-> - ระหว่างสู้ในโซนที่คู่ไว้ Return To Farm Zone / Patrol / การเลือกเป้าใช้เฉพาะโซนนั้น
-> - ข้อจำกัด: เห็นเป้าได้เฉพาะมอนที่เกมโหลดมาถึงเรา (streaming) โซนที่ไกลมากอาจต้องเดินไปใกล้ก่อนถึงจะเห็น
-- พอไปถึง Waypoint สุดท้ายแล้ว ถ้า Farmzone ที่ Paired ไว้กับ Waypoint นั้นไม่เจอ Paired Targets ให้เดินถอยกลับ
-  - ตัวอย่าง: Waypoint มีทั้งหมด 10 ตำแหน่ง พอไปถึง 10 แล้วไม่เจอ Paired Targets จะเดินกลับ 10 > 9 > 8 > 7 ... จนถึง 1
-- ระหว่างทางให้หา Paired Targets ใน Paired Farmzone ที่ Paired ไว้กับ Waypoint นั้น เช่น Paired Waypoint#1 ไว้กับ Farmzone#1
-- หากไม่เจอ Paired Targets ใน Paired Farmzone ทั้งหมด ให้ยืนรอจนกว่า Target จะเกิด
-- หาก Target ถูกเพิ่มเข้ามาใน Paired Farmzone#2 แต่ตัวละครอยู่ Paired Farmzone# อื่น ให้เดินกลับไป Paired Farmzone# นั้นตาม Waypoint ที่ตั้งไว้แบบ Dynamic
+- Once it reaches the last Waypoint, if the Farmzone paired with that Waypoint has no Paired Targets it walks back.
+  - Example: there are 10 Waypoints in total; on reaching 10 with no Paired Targets it walks back 10 > 9 > 8 > 7 ... all the way to 1.
+- Along the way it looks for Paired Targets in the Paired Farmzone paired with that Waypoint, e.g. Paired Waypoint#1 paired with Farmzone#1.
+- If it finds no Paired Targets in any of the Paired Farmzones, it stands and waits until a Target spawns.
+- If a Target is added to Paired Farmzone#2 but the character is in another Paired Farmzone, it walks back to that Paired Farmzone along the Waypoints as set up, dynamically.
+
+> **Done:** **Waypoint Loop** is enabled in the Waypoints section (Profile Settings).
+> - Pairs a Waypoint with a Farmzone through the **Pair Waypoint** + **Paired Farm Zone** dropdowns (the list shows `> Z#`).
+> - Targets for each Farmzone: pick the zone in **Edit Farm Zone**, then add from **Add Zone Target** (empty = use Enemy Priority).
+> - Once the route is finished, if the zone paired with that Waypoint has targets it fights in that zone only; if it has none it walks back N > N-1 > ... > 1
+>   to find a zone that has targets. If it finds none at all it stands and waits, and as soon as a target spawns in a zone it walks the Waypoints to that zone.
+> - While fighting inside the paired zone, Return To Farm Zone / Patrol / target selection apply to that zone only.
+> - Limitation: it can only see mobs the game has streamed to us; a zone that is very far away may need walking closer before they become visible.
 
 ### [x] Waypoints Priority Wait
-- ตอนวิ่งไปถึง Waypoint แล้ว สามารถตั้งใน Priority ให้รอ x วินาที ก่อนไป Waypoint ถัดไป
-- Default คือ 0
-- Edit ได้จาก UI (ต้องแก้ Utils UI ให้รองรับ)
 
-> ทำแล้ว: รายการ All Waypoints มีช่องตัวเลข "Wait (s)" ทุกแถว (0–600 วินาที) เก็บใน `PLACE_CONFIG.WAYPOINT_WAITS`
-> ในโปรไฟล์ ย้าย/ลบ waypoint แล้วค่ารอตามไปด้วย ตอนรอจะยืนนิ่งและไม่เข้าสู้ (เหมือนตอนเดินเส้นทาง)
-> ตายหรือเปลี่ยนโปรไฟล์แล้วยกเลิกการรอ Utils: `AddPriority(name, values, { Values = true, ... })`
+- On running up to a Waypoint, a wait of x seconds can be set in the Priority list before going to the next Waypoint.
+- The default is 0.
+- It is editable from the UI (the Utils UI had to be changed to support it).
+
+> **Done:** the All Waypoints list has a "Wait (s)" number field on every row (0–600 seconds), stored in `PLACE_CONFIG.WAYPOINT_WAITS`.
+> In the profile, moving or removing a waypoint carries the wait value with it; while waiting it stands still and does not fight (the same as while walking the route).
+> Dying or switching profiles cancels the wait. Utils: `AddPriority(name, values, { Values = true, ... })`
 
 ### [x] UI Priority Draggable
-- ลาก Priority ขึ้นลงได้ โดยไม่ต้องกด up/down
 
-> ทำแล้ว: ลากที่ชื่อแถวได้ทุกรายการ Priority (Enemy, Waypoints, Farm Zones, Deadzones, Whitelist) มีเส้นบอกตำแหน่งวาง
-> ปุ่ม ▲▼ ยังใช้ได้เหมือนเดิม
+- Priorities can be dragged up and down without pressing up/down.
+
+> **Done:** every Priority list can be dragged by its row name (Enemy, Waypoints, Farm Zones, Deadzones, Whitelist) with a line showing where it will land.
+> The ▲▼ buttons still work as before.
 
 ### [x] Auto Confirm Block
-- เอา AutoBlockConfirm จาก Iambatman มาใช้: กด Block ในหน้าต่างยืนยันของ Roblox ให้อัตโนมัติ
 
-> ทำแล้ว (v2.69): เปิด **Auto Confirm Block** (ใต้ Auto Block, บันทึกในโปรไฟล์ ค่าเริ่มต้นปิด)
-> - หลัง Auto Block เปิดหน้าต่าง Block จะหาปุ่ม `Block` ใน CoreGui ภายใน 6 วินาที (`ARM_SECONDS`)
->   กดเฉพาะหน้าต่างที่ชื่อเรื่องเป็นชื่อผู้เล่นคนนั้น และไม่กด "Block and report"
-> - ลองกดทีละวิธี getconnections > firesignal > VirtualInputManager > เมาส์จริง แล้วเช็คว่าบล็อกสำเร็จจริง
->   วิธีที่สำเร็จจะถูกลองก่อนในครั้งถัดไป ถ้ากดไม่ได้จะแจ้งให้กดเอง
-> - บล็อกสำเร็จแล้ว Auto Block ย้ายเซิร์ฟต่อตามเดิม
-> - ใช้ได้เฉพาะ executor ที่อ่าน CoreGui ได้ (Studio ไม่ได้) Debug: `getgenv().AICBlockConfirmDebug = true`
+- Uses AutoBlockConfirm from Iambatman: automatically presses Block in Roblox's confirmation window.
+
+> **Done (v2.69):** enable **Auto Confirm Block** (under Auto Block, saved in the profile, default off).
+> - After Auto Block opens the Block window it looks for the `Block` button in CoreGui within 6 seconds (`ARM_SECONDS`).
+>   It only presses a window whose title is that player's name, and never presses "Block and report".
+> - It tries one click method at a time — getconnections > firesignal > VirtualInputManager > real mouse — then checks that the block actually succeeded.
+>   A method that worked is tried first next time; if it cannot press the button it asks you to press it yourself.
+> - Once the block has succeeded, Auto Block hops servers as before.
+> - Only works on executors that can read CoreGui (not Studio). Debug: `getgenv().AICBlockConfirmDebug = true`
 
 ### [x] Auto Mining
-- ขุดแร่ใน MineZone หลังเดิน Waypoint ครบ มีศัตรูเข้ามาใกล้ 15 studs ให้ชักดาบตี ระหว่างขุดยืนนิ่ง
-- MineZone: ขุดเฉพาะแร่ในโซน แร่นอกโซนไม่เป็นเป้าเดิน มี slider ปรับรัศมี
-- Ore Priority + จำนวนเป้าหมายต่อแร่ (สูงสุด 500) หักของที่มีในกระเป๋าแล้ว
-- Billboard สถานะแร่ ผูกกับ DebugVisualizer
-- `IsHoleAhead`: เจอหลุมกระโดดข้ามได้ก็กระโดด ไม่ได้ก็ใช้ Pathfinding / ปรับ MoveTo, jump, Pathfinding ให้เคารพ deadzone และ MineZone
 
-> ทำแล้ว (v2.70): แท็บ **Mining**
-> - **Auto Mining** (บันทึกในโปรไฟล์ ค่าเริ่มต้นปิด) ทำงานในลูป Auto Farm หลังเดิน Waypoint ครบ (Auto Farm ต้องเปิด)
->   ไม่มีแร่ให้ขุดก็กลับไปฟาร์มตามปกติ บรรทัด STATUS บอกว่ากำลังทำอะไร/รออะไร
-> - **Ore Priority**: ลากเรียงลำดับได้ ช่อง Target ต่อแร่ (0–500) ค่าเริ่มต้น Iron Ore, Copper Ore อย่างละ 500
->   ขุดแร่ลำดับสูงสุดที่ยังไม่ครบเป้า ถ้าแร่นั้นไม่มีก้อนว่างในโซน (โดนจอง/กำลังเกิดใหม่/ไปไม่ถึง) ข้ามไปลำดับถัดไป
->   เป้าที่เหลือ = Target − จำนวนในกระเป๋า อ่านจาก `PlayerStats.Inventory` ทุกครั้งที่เลือกก้อน
-> - เพิ่มแร่จาก dropdown **Add Ore** (แร่ที่โหลดอยู่) หรือพิมพ์ชื่อใน **Ore Name** สำหรับแร่ที่อยู่ไกลเกินโหลด
-> - **Mine Zone**: Add Mine Zone Here / Mine Zone Radius (5–300) / Edit Mine Zone / Clear เก็บใน `PLACE_CONFIG.MINE_ZONES`
->   ไม่มี Mine Zone = ไม่ขุด แร่ใน deadzone ก็ไม่ขุด
-> - เดินไปห่างก้อน ≤ 15 studs แล้วยิง `ClaimMaterial` ยืนนิ่งจนหมด cooldown ของเกม (`CoreCommons`) +0.5 วิ
->   เดินไม่ถึงใน 15 วิ หรือหาทางไม่ได้ ข้ามก้อนนั้น 30 วิ
-> - ศัตรูในระยะ 15 studs: ชักดาบ หันหา ตีเมื่อถึงระยะ ระหว่างขุดไม่ขยับ ระหว่างเดินเข้าไปตีได้เฉพาะในโซน
->   ศัตรูที่อยู่นอกโซนและตีไม่ถึงจะไม่สนใจ (กันยืนรอมอนที่ยืนเฉยๆ ตลอดไป) Retreat ตอนเลือดต่ำยังทำงานเหมือนเดิม
-> - การเดิน (`MiningMovement`): เดินตรงถ้าปลอดภัย ใช้ Pathfinding เมื่อเจอกำแพงที่โดดไม่พ้น หลุมกว้างเกินโดด
->   ที่สูงเกินโดด deadzone ขวาง หรือจะออกนอก MineZone (ถ้าอยู่ในโซนแล้ว) ติดเกิน 1.5 วิก็เปลี่ยนไปใช้ Pathfinding
->   เส้นทางที่ผ่าน deadzone หรือออกนอกโซนจะไม่ใช้ คำนวณ path นอก Heartbeat ไม่ทำให้เฟรมค้าง
-> - `AICCombatUtils.IsHoleAhead`: เช็คพื้นข้างหน้าทุก 1 stud ถึง 6 studs ตกลึกกว่า 6 studs/น้ำ/ไม่มีพื้น = หลุม
->   คำนวณระยะโดดจาก WalkSpeed + JumpPower/JumpHeight (เผื่อ 80%) ถ้ามีพื้นฝั่งตรงข้ามในระยะ โดดตอนถึงขอบ 2.5 studs
-> - Debug: **Debug Mine Zones** (วงสีฟ้า) และ **Debug Ore Status** ป้ายบนแร่ในระยะ 150 studs
->   (TARGET / MINING x.xs / READY มี/เป้า / DONE / TAKEN / REGENERATING / OUTSIDE MINE ZONE / NOT IN PRIORITY ...)
-> - ข้อสันนิษฐานที่ต้องเช็คในเกม: ชื่อไอเทมในกระเป๋าตรงกับชื่อโมเดลแร่ (เช่น "Iron Ore") และระยะ claim 15 studs ตาม demo
+- Mines ore inside the MineZone after the Waypoint route is finished; if an enemy comes within 15 studs it draws the sword and attacks; it stands still while mining.
+- MineZone: it only mines ore inside the zone; ore outside the zone is not a target to walk to; there is a slider to adjust the radius.
+- Ore Priority + the target amount per ore (max 500), minus what is already in the inventory.
+- A billboard showing the ore's status, tied to DebugVisualizer.
+- `IsHoleAhead`: if it finds a hole it can jump across it jumps, otherwise it uses Pathfinding; MoveTo, jump and Pathfinding are adjusted to respect the deadzone and the MineZone.
 
-### [x] Auto Block: ตั้งดีเลย์ได้
-- เพิ่ม feature ตั้งดีเลย์ของ Auto Block ได้
+> **Done (v2.70):** the **Mining** tab.
+> - **Auto Mining** (saved in the profile, default off) runs inside the Auto Farm loop after the Waypoint route is finished (Auto Farm has to be on).
+>   With no ore to mine it goes back to farming as usual; the STATUS line says what it is doing or waiting for.
+> - **Ore Priority**: drag to reorder, with a Target field per ore (0–500); the default is Iron Ore and Copper Ore at 500 each.
+>   It mines the highest-ranked ore that has not reached its target; if that ore has no free chunk in the zone (claimed / regenerating / unreachable) it skips to the next rank.
+>   Remaining target = Target − the amount in the inventory, read from `PlayerStats.Inventory` every time a chunk is chosen.
+> - Add ore from the **Add Ore** dropdown (ore that is loaded), or type a name into **Ore Name** for ore too far away to be loaded.
+> - **Mine Zone**: Add Mine Zone Here / Mine Zone Radius (5–300) / Edit Mine Zone / Clear, stored in `PLACE_CONFIG.MINE_ZONES`.
+>   No Mine Zone = no mining; ore inside a deadzone is not mined either.
+> - It walks to within ≤ 15 studs of the chunk and fires `ClaimMaterial`, standing still until the game's cooldown (`CoreCommons`) runs out +0.5 s.
+>   If it cannot reach it within 15 s, or cannot find a way, it skips that chunk for 30 s.
+> - Enemies within 15 studs: draw the sword, turn towards them, and attack once in range; while mining it does not move; while walking over to attack it only does so inside the zone.
+>   An enemy outside the zone that cannot be hit is ignored (this prevents waiting forever on a mob that is just standing there). Retreat at low HP still works as before.
+> - Movement (`MiningMovement`): it walks straight when that is safe and uses Pathfinding when it meets a wall it cannot jump, a hole too wide to jump,
+>   a ledge too high to jump, a deadzone in the way, or a step that would leave the MineZone (if it is already inside); stuck for more than 1.5 s also switches to Pathfinding.
+>   A path that crosses a deadzone or leaves the zone is rejected. Path calculation happens outside Heartbeat, so it does not stall frames.
+> - `AICCombatUtils.IsHoleAhead`: checks the ground ahead every 1 stud up to 6 studs; a drop deeper than 6 studs, water, or no ground = a hole.
+>   The jump distance is computed from WalkSpeed + JumpPower/JumpHeight (with 80% allowance); if there is ground on the other side within range it jumps 2.5 studs before the edge.
+> - Debug: **Debug Mine Zones** (blue circles) and **Debug Ore Status**, a label on ore within 150 studs
+>   (TARGET / MINING x.xs / READY has/target / DONE / TAKEN / REGENERATING / OUTSIDE MINE ZONE / NOT IN PRIORITY ...).
+> - Assumptions that need checking in game: inventory item names match the ore model names (e.g. "Iron Ore"), and the 15 studs claim distance from the demo.
 
-> ทำแล้ว (v2.71): slider **Block Delay (s)** ในส่วน Auto Block (0–120 วินาที ค่าเริ่มต้น 0 = ทำทันทีเหมือนเดิม บันทึกในโปรไฟล์)
-> - เจอผู้เล่นที่ไม่อยู่ใน whitelist จะยังฟาร์มต่อตามปกติจนครบดีเลย์ แล้วค่อย Block และย้ายเซิร์ฟ
-> - นับเวลาแยกรายคน เริ่มตั้งแต่เห็นคนนั้นครั้งแรก ออกจากเซิร์ฟแล้วกลับเข้ามาใหม่จะเริ่มนับใหม่
-> - ถ้าตั้ง Leader ใน Party System ไว้ Party จะจัดการคนแปลกหน้าแทน ดีเลย์นี้ไม่มีผล
+### [x] Auto Block: configurable delay
+
+- Add a feature to set a delay for Auto Block.
+
+> **Done (v2.71):** the **Block Delay (s)** slider in the Auto Block section (0–120 seconds, default 0 = acts immediately as before, saved in the profile).
+> - When it sees a player who is not in the whitelist it keeps farming as usual until the delay is up, then blocks and hops servers.
+> - The timer is counted per person, starting from the first time that person is seen; leaving the server and coming back restarts the count.
+> - If a Leader is set in Party System, Party handles strangers instead and this delay has no effect.
 
 ### [x] Auto Smithing
-- ทำระบบ auto smithing จาก PoC: เลือกสูตรตาม priority, เดินไปโต๊ะ, `CraftingStart`, เล่นมินิเกมกด strike เอง
-- คิดวัตถุดิบที่ใช้ และ SmithingSkill ที่แต่ละสูตรต้องการ
-- ไม่เกี่ยวกับการขุด / ใช้โต๊ะใกล้สุดหรือที่เลือกไว้ / กรอกจำนวนได้ / มี Reserve วัตถุดิบ
 
-> ทำแล้ว (v2.72): แท็บ **Crafting**
-> - **Auto Smithing** (บันทึกในโปรไฟล์ ค่าเริ่มต้นปิด) แยกจาก Auto Mining
->   เปิด Auto Farm: คราฟหลังเดิน Waypoint ครบ ทำก่อนการขุด แต่ไม่ดึงออกตอนกำลังขุดก้อนแร่อยู่
->   ปิด Auto Farm: ทำงานเองได้ (เดินไปโต๊ะแล้วคราฟอย่างเดียว)
-> - **Recipe Priority**: ลากเรียงได้ ช่อง Target ต่อสูตร (0–500) ค่าเริ่มต้น Iron Ingot, Copper Ingot อย่างละ 500
->   ข้ามสูตรที่ SmithingSkill ไม่ถึง `CraftingSkill`, วัตถุดิบไม่พอ หรือในกระเป๋ามีครบเป้าแล้ว
->   เพิ่มจาก dropdown **Add Recipe** (โชว์ skill ที่ต้องใช้และวัตถุดิบ เรียงจากง่ายไปยาก)
-> - **Recipe Status**: บรรทัดละสูตร READY xN / LOCKED SKILL ต้องการ/มี / NEED วัตถุดิบ มี/ต้องใช้ / DONE / PAUSED
-> - **Material Reserve**: ตั้งจำนวนวัตถุดิบที่เก็บไว้ ไม่เอาไปคราฟ (เช่น Keep Iron Ore 40)
-> - **Set Smithing Table** (ยืนใกล้โต๊ะ ≤ 20 studs) บันทึกตำแหน่งลงโปรไฟล์ / **Use Nearest Table** กลับไปใช้โต๊ะใกล้สุด
->   บันทึกเป็นตำแหน่ง ไม่ใช่ Id (Id อาจเปลี่ยนตามเซิร์ฟ) ตอนใช้หาโต๊ะในระยะ 10 studs จากจุดนั้น
-> - เดินไปโต๊ะด้วย `WalkController` (เปลี่ยนชื่อจาก MiningMovement) ห่างโต๊ะ ≤ 8 studs แล้วเรียก `CraftingStart`
->   เดินไม่ถึงใน 30 วิ หรือหาทางไม่ได้ ข้ามโต๊ะนั้น 30 วิ มอนเข้าระยะตีระหว่างเดินจะตีก่อนแล้วเดินต่อ
-> - มินิเกม (`SmithingMinigame`): เช็คทุกเฟรม (RenderStepped) กด `Action` ตอน `Mover` ทับ `ClickArea`
->   กดผ่าน firesignal/getconnections (สัญญาณ `MouseButton1Click` ตาม PoC) ถ้าไม่มีใช้ VirtualInputManager/เมาส์จริง
->   แบบหลังจะคำนวณตำแหน่ง Mover เฟรมถัดไปจากความเร็ว
-> - จบเมื่อ Success/Failed ขึ้นและ GUI ปิด แล้วรอกระเป๋าอัปเดตก่อนเลือกสูตรถัดไป ทุกขั้นมี timeout ไม่ค้าง
->   ล้มเหลวติดกัน 3 ครั้ง พักสูตรนั้น 60 วิ
-> - Debug: **Debug Smithing Tables** ป้ายบนโต๊ะ (TARGET / CRAFTING / READY / UNREACHABLE / NOT THE SET TABLE)
-> - แยกโค้ดกดปุ่มเป็น `Core/GuiClick.lua` ใช้ร่วมกับ Auto Confirm Block, ลบ `AutoCraft.lua` (stub)
-> - แก้ AutoMining: ตอนไม่มีแร่ให้ขุดไม่สแกนทุกเฟรมแล้ว (ทุก 0.5 วิ)
-> - ข้อสันนิษฐานที่ต้องเช็คในเกม: ชื่อไอเทมที่คราฟได้ตรงกับชื่อสูตร, ระยะใช้โต๊ะ 8 studs, ปุ่ม Action รับ `MouseButton1Click`
+- Implements the auto smithing system from the PoC: pick a recipe by priority, walk to the table, `CraftingStart`, play the minigame and press strike itself.
+- It accounts for the materials used and the SmithingSkill each recipe requires.
+- Separate from mining / uses the nearest or the chosen table / an amount can be entered / has a material Reserve.
 
-### [x] Smithing: หน้าต่าง Recipe Browser แยกจาก UI หลัก
-- กดแล้วเปิด UI แยกออกมา มีช่อง search และ list แบบ ScrollingFrame แทน dropdown
-- กดสูตรแล้วโชว์รายละเอียด บอกว่าขาดวัตถุดิบอะไรบ้าง
-- กดของที่ขาดแล้วมีกรอบลอยบอกว่าใช้อะไรคราฟ (ถ้าเป็นของที่คราฟได้)
+> **Done (v2.72):** the **Crafting** tab.
+> - **Auto Smithing** (saved in the profile, default off) is separate from Auto Mining.
+>   With Auto Farm on: it crafts after the Waypoint route is finished, before mining, but is not pulled away while it is mining an ore chunk.
+>   With Auto Farm off: it works on its own (walks to the table and only crafts).
+> - **Recipe Priority**: drag to reorder, with a Target field per recipe (0–500); the default is Iron Ingot and Copper Ingot at 500 each.
+>   It skips recipes whose SmithingSkill is below `CraftingSkill`, that lack materials, or whose inventory count already meets the target.
+>   Added from the **Add Recipe** dropdown (shows the skill required and the materials, ordered easiest to hardest).
+> - **Recipe Status**: one line per recipe — READY xN / LOCKED SKILL required/have / NEED materials have/required / DONE / PAUSED.
+> - **Material Reserve**: sets how much of a material to keep and not craft with (e.g. Keep Iron Ore 40).
+> - **Set Smithing Table** (stand within ≤ 20 studs of the table) saves the position to the profile / **Use Nearest Table** goes back to using the nearest table.
+>   It stores a position, not an Id (the Id can change per server); when used it finds a table within 10 studs of that point.
+> - It walks to the table with `WalkController` (renamed from MiningMovement); within ≤ 8 studs of the table it calls `CraftingStart`.
+>   If it cannot reach it within 30 s, or cannot find a way, it skips that table for 30 s. A mob entering attack range on the way is fought first, then it keeps walking.
+> - Minigame (`SmithingMinigame`): checks every frame (RenderStepped) and presses `Action` when `Mover` overlaps `ClickArea`.
+>   It presses through firesignal/getconnections (the `MouseButton1Click` signal from the PoC); if that is unavailable it uses VirtualInputManager/real mouse,
+>   and the latter computes the next frame's Mover position from its speed.
+> - It finishes when Success/Failed appears and the GUI closes, then waits for the inventory to update before choosing the next recipe. Every step has a timeout, so nothing hangs.
+>   Three failures in a row pauses that recipe for 60 s.
+> - Debug: **Debug Smithing Tables**, a label on tables (TARGET / CRAFTING / READY / UNREACHABLE / NOT THE SET TABLE).
+> - The button-pressing code was split out into `Core/GuiClick.lua`, shared with Auto Confirm Block, and `AutoCraft.lua` (stub) was removed.
+> - AutoMining fix: with no ore to mine it no longer scans every frame (every 0.5 s instead).
+> - Assumptions that need checking in game: the crafted item's name matches the recipe name, the 8 studs table range, and the Action button accepting `MouseButton1Click`.
 
-> ทำแล้ว (v2.74): ปุ่ม **Open Recipe Browser** ในแท็บ Crafting (แทน dropdown Add Recipe) เปิดหน้าต่างแยก ลากย้ายได้ ปิดด้วย ×
-> - ซ้าย: list ทุกสูตร เรียงจาก skill น้อยไปมาก ค้นได้ทั้งชื่อสูตรและชื่อวัตถุดิบ (พิมพ์ชื่อแร่ = เจอทุกสูตรที่ใช้แร่นั้น)
->   แต่ละแถวโชว์ skill + สถานะ READY xN (เหลือง) / NEED วัตถุดิบ มี/ต้องใช้ (ส้ม) / LOCKED (เทา), มี ✓ ถ้าอยู่ใน Recipe Priority แล้ว
-> - ขวา: สูตรที่เลือก skill ที่ต้องใช้เทียบกับของเรา, ประเภท, จำนวนที่มี, วัตถุดิบต่อการคราฟ 1 ครั้ง
->   แต่ละอันโชว์ มี/ต้องใช้ และ MISSING กี่ชิ้น (นับหลังหัก Material Reserve แล้ว), ปุ่ม Add/Remove Recipe Priority
-> - กดวัตถุดิบ: กรอบลอยข้างแถว บอกจำนวนที่มี ถ้าคราฟได้จะโชว์วัตถุดิบของมันพร้อม มี/ต้องใช้ และปุ่ม **OPEN RECIPE**
->   ถ้าคราฟไม่ได้จะบอกว่าไม่มีสูตร Smithing ที่ทำของนี้ / กดที่อื่นหรือ × เพื่อปิด
-> - อัปเดตกระเป๋าและ skill ทุก 1 วิ ตอนหน้าต่างเปิดอยู่ (`SmithingBrowser.lua`)
+### [x] Smithing: Recipe Browser as a separate window
 
-### [x] Server: ย้าย feature ที่เกี่ยวกับ server จาก Iambatman มาทั้งหมด
-> ทำแล้ว (v2.75): แท็บใหม่ **Server** (`ServerHop.lua` ทำงาน, `ServerUI.lua` วาด UI)
-> - **Current Server**: จำนวนผู้เล่น/สูงสุด + ชื่อแมพ, Job ID + PlaceId, FPS และ Ping (สีเหลือง/ส้ม/แดงตามเกณฑ์ 50/30 FPS, 100/200 ms), สถานะการย้ายเซิร์ฟ
->   ปุ่ม **Rejoin** (เข้าเซิร์ฟเดิม), **Server Hop** (สุ่มเซิร์ฟ public ที่ยังไม่เต็ม อ่านรายการสูงสุด 4 หน้า), **Copy Job ID**,
->   ช่อง **Job ID** + **Join Job ID** (เข้าเซิร์ฟตาม Job ID), **Open Server Browser**
-> - **Server Browser**: หน้าต่างแยก ซ้ายเป็นรายการเซิร์ฟ public (เซิร์ฟที่อยู่ขึ้นก่อน "YOU ARE HERE") โชว์ผู้เล่น/Ping/FPS/Job ID ย่อ, Refresh / Load More
->   กดเซิร์ฟแล้วขวาโชว์รายละเอียด + Copy Job ID + Join ถ้าเป็นเซิร์ฟปัจจุบันจะโชว์รายชื่อผู้เล่นในเซิร์ฟด้วย (เซิร์ฟอื่น Roblox ให้แค่จำนวน)
-> - **Leave On Danger Group** (ค่าเริ่มต้นเปิด เหมือน Iambatman ที่เปิดตลอด): เช็คทุกคนในเซิร์ฟว่าอยู่กลุ่ม 5928691 ไหม
->   ถ้าใช่และไม่อยู่ใน whitelist ของ Auto Block → ย้ายเซิร์ฟทันที ลองสูงสุด 3 ครั้ง (เช็คกลุ่มพลาดลองใหม่ 3 ครั้ง ห่าง 5 วิ)
->   เริ่มเช็คหลังโหลดโปรไฟล์แล้ว (whitelist ต้องโหลดก่อน) และเช็คซ้ำทุก 2 วิ เผื่อเอาใครออกจาก whitelist
-> - **Join Alerts** (ค่าเริ่มต้นปิด): แจ้งเตือนเมื่อมีคนนอก whitelist เข้ามา หรืออยู่ในเซิร์ฟตอนเปิด
-> - **Player Log**: 15 รายการล่าสุด เวลา JOINED / LEFT / PRESENT @ชื่อ พร้อมป้าย [WL] [DANGER] เก็บสูงสุด 100, ปุ่ม Clear Log
-> - "เพิ่มทุกคนในเซิร์ฟเข้า whitelist" มีอยู่แล้วใน Auto Block (**Add Everyone Here**) ไม่ได้ทำซ้ำ
-> - แยกโค้ดสร้างหน้าต่างลอยเป็น `UI/Floating.lua` ใช้ร่วมกับ Recipe Browser
-> - รายการเซิร์ฟต้องใช้ `game:HttpGet` (executor) ใน Studio จะขึ้นว่าโหลดไม่ได้
+- Pressing it opens a separate UI with a search field and a ScrollingFrame list instead of a dropdown.
+- Selecting a recipe shows its details and says which materials are missing.
+- Selecting a missing material opens a floating box saying what it is crafted from (if it is craftable).
 
-### [x] Auto Mining: เดินไปหาแร่แล้วมีสิ่งกีดขวาง ใช้ Pathfinding ก่อน ถ้าคำนวณไม่ผ่านค่อย MoveTo แบบฉลาด
-> ทำแล้ว (v2.76): `WalkController` (ใช้ทั้ง Auto Mining และ Auto Smithing)
-> - เช็คสิ่งกีดขวางด้วยกล่องขนาดตัวละคร (กว้าง 2.4, จากเหนือเท้า 1 stud ถึงหัว) ข้างหน้า 8 studs แทน ray เส้นเดียวระดับเอว
->   ไม่นับพื้นลาดที่เดินขึ้นได้ (ผิวหันขึ้น > 0.6) ไม่นับแร่เป้าหมาย มอน และผู้เล่น
-> - เจอสิ่งกีดขวาง (รวมของเตี้ยที่กระโดดข้ามได้) → ใช้ Pathfinding ก่อน (เดิมเดินตรงแล้วกระโดดข้าม)
-> - Pathfinding คำนวณไม่ผ่าน → เดินอ้อม: หาด้านที่โล่งใกล้ทิศเป้าหมายที่สุด (30°–150° สลับซ้าย/ขวา) โล่งอย่างน้อย 4 studs
->   ไม่ใช่หลุม/deadzone/นอกโซนขุด เดินไปจุดนั้น (≤ 2.5 วิ) แล้วลองทางตรงและ Pathfinding ใหม่จากตรงนั้น
-> - อ้อมครบ 4 ครั้งแล้วยังไม่เข้าใกล้ขึ้น (≥ 2 studs) ถ้าสิ่งกีดขวางเตี้ยพอจะกระโดดข้ามแทน ไม่งั้นถือว่าไปไม่ถึง (เดิมยอมแพ้ทันทีที่ path ไม่ผ่าน)
-> - ติดอยู่ระหว่างเดินตาม path นานเกิน 1.5 วิ → คำนวณ path ใหม่จากจุดที่อยู่
+> **Done (v2.74):** the **Open Recipe Browser** button in the Crafting tab (replacing the Add Recipe dropdown) opens a separate, draggable window that closes with ×.
+> - Left: a list of every recipe, ordered from least to most skill, searchable by recipe name and by material name (typing an ore name finds every recipe that uses it).
+>   Each row shows skill + status READY xN (yellow) / NEED materials have/required (orange) / LOCKED (grey), with ✓ if it is already in Recipe Priority.
+> - Right: for the selected recipe — the skill required compared with ours, the type, the amount held, and the materials per single craft.
+>   Each one shows have/required and how many are MISSING (counted after subtracting Material Reserve), plus an Add/Remove Recipe Priority button.
+> - Selecting a material: a floating box next to the row gives the amount held; if it is craftable it shows its own materials with have/required and an **OPEN RECIPE** button.
+>   If it is not craftable it says there is no Smithing recipe that makes this item / click elsewhere or × to close.
+> - It refreshes the inventory and skill every 1 s while the window is open (`SmithingBrowser.lua`).
 
-### [x] Combat: วิ่งลากมอนมารวมกันก่อนแล้วค่อยใช้สกิล
-> ทำแล้ว (v2.79, Phase 1): แท็บ Farming → section **Mob Gather** (`MobGather.lua`) toggle **Gather Mobs** (บันทึกในโปรไฟล์ ค่าเริ่มต้นปิด)
-> - **Min Mobs** (2–8, ค่าเริ่มต้น 3) / **Max Mobs** (2–10, 5) / **Gather Radius** (15–80, 40) + บรรทัดสถานะ
-> - IDLE: หากลุ่มมอนที่ตีได้ (อยู่ใน Enemy Priority, ในฟาร์มโซน, ไม่มีผู้เล่นอื่นตีอยู่) อย่างน้อย Min Mobs ตัวในรัศมี Gather Radius
->   ไม่ถึงก็ฟาร์มปกติ เลือดต่ำกว่า 50% (`COMBAT_SKILL_MIN_HP_PERCENT`) ไม่เริ่มลาก
-> - TAG: วิ่งไปตีทีละตัวตัวละครั้งเดียวให้ตามมา (ตัวที่ `LastAttacker` เป็นเราอยู่แล้วข้ามได้) เรียงตัวใกล้ต่อตัวใกล้ ตัวละไม่เกิน 6 วิ
-> - KITE: ถอยออกจากกลุ่ม 12 studs (ในฟาร์มโซน ไม่ใช่ deadzone/น้ำ ทางโล่ง) แล้วรอให้มอนเข้ามาในระยะสกิล (15) ไม่เกิน 4 วิ
-> - BURST: หันหน้าเข้ากลุ่มแล้วกดสกิลทันทีที่พร้อม (รอไม่เกิน 4 วิ) จากนั้นให้ระบบต่อสู้ปกติตีต่อ
-> - FIGHT: จบรอบเมื่อมอนที่ลากมาตายหรือหลุดหมด (ห่างเกิน 35 studs นาน 3 วิ = หลุด) หรือเกิน 25 วิ แล้วพัก 4 วิ ก่อนรอบใหม่
-> - ถอยตอนเลือดต่ำ / หลบสกิลมอน / Auto Block / เดิน waypoint ทำงานก่อนเสมอ เข้า duel แล้วยกเลิกรอบ
-> - ยังต้องเช็คในเกม: มอนตามไกลแค่ไหน (leash), มอนเร็วกว่าเราไหม, สกิลเป็น AoE รัศมีเท่าไหร่ (ค่าที่ใช้ตอนนี้ระวังไว้ก่อน)
+### [x] Server: move all server-related features over from Iambatman
 
-### [x] Smithing: Recipe Browser ปรับขนาด (resize) และย่อ (minimize) ได้
-> ทำแล้ว (v2.80): ทำใน `UI/Floating.lua` เลยได้ทั้ง Recipe Browser และ Server Browser
-> - ปุ่ม **—** ข้างปุ่มปิด: ย่อเหลือแค่แถบหัว กด **+** เพื่อขยายกลับ (ย่อ Recipe Browser แล้วกรอบลอยวัตถุดิบปิดด้วย)
-> - ลากมุมขวาล่าง (**◢**) เพื่อปรับขนาด มุมซ้ายบนอยู่ที่เดิม เล็กสุด 360×240 ใหญ่สุดไม่เกินขอบจอ
-> - ขนาดและสถานะย่อจำไว้ตลอดรอบที่เปิดสคริปต์ ปิดแล้วเปิดใหม่ยังเหมือนเดิม (เปิดครั้งแรกอยู่กลางจอ)
+> **Done (v2.75):** new **Server** tab (`ServerHop.lua` does the work, `ServerUI.lua` draws the UI)
+> - **Current Server**: player count / max + map name, Job ID + PlaceId, FPS and Ping (yellow/orange/red at the 50/30 FPS and 100/200 ms thresholds), server-hop status
+>   Buttons **Rejoin** (rejoin the same server), **Server Hop** (pick a random public server that is not full, reads up to 4 pages of the list), **Copy Job ID**,
+>   field **Job ID** + **Join Job ID** (join the server of that Job ID), **Open Server Browser**
+> - **Server Browser**: separate window, the public server list on the left (the server you are in is listed first, marked "YOU ARE HERE") showing players/Ping/FPS/short Job ID, Refresh / Load More
+>   Click a server and the right side shows the details + Copy Job ID + Join; for the server you are in it also lists the players in it (for other servers Roblox gives only the count)
+> - **Leave On Danger Group** (default on, like Iambatman which kept it on at all times): checks everyone in the server for membership of group 5928691
+>   If yes and they are not in the Auto Block whitelist → hop servers at once, up to 3 attempts (a failed group check retries 3 times, 5 s apart)
+>   Checks start after the profile has loaded (the whitelist has to load first) and re-check every 2 s, in case someone is removed from the whitelist
+> - **Join Alerts** (default off): notifies when someone outside the whitelist joins, or is already in the server when you turn it on
+> - **Player Log**: the latest 15 entries, time + JOINED / LEFT / PRESENT @name, with [WL] [DANGER] labels, keeps up to 100, Clear Log button
+> - "Add everyone in the server to the whitelist" already exists in Auto Block (**Add Everyone Here**), it was not duplicated
+> - The floating-window code was split out into `UI/Floating.lua`, shared with the Recipe Browser
+> - The server list needs `game:HttpGet` (executor); in Studio it shows as failed to load
 
-### [x] Auto Start Game: กดผ่านหน้า title ให้เอง
-> ทำแล้ว (v2.86): เปิด **Auto Start Game** (บันทึกในโปรไฟล์) พอร์ตมาจาก AutoStartGame ของ Iambatman
-> - กด "CLICK ANYWHERE TO CONTINUE" แล้วกด "// START GAME" ให้ เข้าเกมแล้วหยุดเอง ไม่เฝ้าจอระหว่างเล่น
-> - เมนูอยู่บน SurfaceGui (StarterGui.GameMenu) ปุ่มตัวเลือกฟัง `MouseButton1Down` เลยยิงสัญญาณครบชุดเหมือนคลิกจริง ใช้ได้ทุกขนาดหน้าต่าง
-> - ถ้าต้องคลิกตามตำแหน่ง จะแปลงพิกัดจาก SurfaceGui เป็นพิกัดบนจอ เมาส์จริงจะคลิกเฉพาะตอนเคอร์เซอร์อยู่ตรงปุ่มแล้วเท่านั้น
-> - ย่อหน้าต่างอยู่: ไม่ใช้เมาส์จริง ถ้ากดไม่ผ่านจะรอจนเปิดหน้าต่างกลับมา · ไม่เจอหน้า title 180 วิ = หยุด · กดไม่ผ่าน 3 รอบ = แจ้งเตือนแล้วหยุด
-> - ไม่กด Customize / Credits / Reset Data · debug: `getgenv().AICStartGameDebug = true`
+### [x] Auto Mining: use Pathfinding first when something blocks the way to an ore, and fall back to a smart MoveTo when it cannot compute
 
-### [x] Server: Leave On Danger Group เซฟแบบ global และมี whitelist ของตัวเอง
-> ทำแล้ว (v2.87): toggle **Leave On Danger Group** กับ **Danger Whitelist** เก็บใน `AutoFarmProfiles/Global.json` ใช้ร่วมกันทุกโปรไฟล์และทุก PlaceId
-> - โหลด/สร้าง/import โปรไฟล์ไม่เปลี่ยนค่านี้ และ export โปรไฟล์ไม่รวมค่านี้ (key `r` ยังจองไว้ ห้ามใช้ซ้ำ)
-> - Danger Whitelist แยกจาก Block Whitelist: คนในกลุ่มอันตรายที่อยู่ใน Danger Whitelist จะไม่ทำให้ออกจากเซิร์ฟ ส่วน Block Whitelist ไม่มีผลกับฟีเจอร์นี้แล้ว
-> - เพิ่มได้จาก dropdown คนในเซิร์ฟ หรือพิมพ์ User ID · ลบออกแล้วถ้าคนนั้นอยู่ในเซิร์ฟจะออกทันที · Player Log มีแท็ก `[DANGER WL]`
-> - ครั้งแรกหลังอัปเดต toggle จะเริ่มที่ปิด (ค่าเดิมในโปรไฟล์ไม่ถูกย้ายมา) ต้องเปิดใหม่หนึ่งครั้ง
+> **Done (v2.76):** `WalkController` (used by both Auto Mining and Auto Smithing)
+> - Obstacles are checked with a box the size of the character (2.4 wide, from 1 stud above the feet up to the head) 8 studs ahead, instead of a single waist-height ray
+>   Slopes you can walk up are not counted (surface facing up > 0.6), nor are the target ore, mobs and players
+> - Something blocks the way (including low objects you can jump over) → use Pathfinding first (previously it walked straight and jumped over)
+> - Pathfinding cannot compute → walk around it: find the most open direction heading towards the target (30°–150°, alternating left/right) with at least 4 studs of clearance
+>   Not a hole/deadzone/outside the mining zone; walk to that point (≤ 2.5 s) then retry the straight line and Pathfinding from there
+> - After 4 detours without getting closer (≥ 2 studs), if the obstacle is low enough it jumps over it instead, otherwise the target counts as unreachable (previously it gave up as soon as the path failed)
+> - Stuck following a path for more than 1.5 s → recompute the path from where it is
 
-### [x] Server: Danger Group ใส่ group ID ได้หลายอัน
-> ทำแล้ว (v2.88): รายการ **Danger Groups** ในแท็บ Server ใส่ Group ID แล้วกด Add Group ID (ลบ / ลากสลับได้) อยู่ในกลุ่มไหนก็ออกจากเซิร์ฟ
-> - เซฟแบบ global ใน `Global.json` เหมือน toggle และ Danger Whitelist (`DANGER_GROUP_IDS`) ค่าเริ่มต้นมี 5928691 อันเดิม
-> - toggle **Leave On Danger Group** ค่าเริ่มต้นยังเป็นปิด · Danger Whitelist ยังแยกจาก Block Whitelist
-> - แก้รายการกลุ่มแล้วจะเช็คทุกคนในเซิร์ฟใหม่ทันที · แจ้งเตือนบอกว่าเจอคนอยู่ในกลุ่มไหน
+### [x] Combat: pull mobs together first, then use the skill
 
-### [x] Smithing: Recipe Browser คราฟได้ในหน้าต่างเดียว + กรองตามประเภท
-> ทำแล้ว (v2.88): ทำ Recipe Browser ใหม่ ใช้หน้าต่างเดียวพอ ไม่ต้องเปิดคู่กับหน้าหลัก
-> - ซ้าย: ช่องค้นหา (ชื่อสูตรหรือวัตถุดิบ) + ปุ่มประเภทไอเทม (ALL / Weapon / ... พร้อมจำนวน) + **READY ONLY** (เฉพาะที่คราฟได้ตอนนี้)
-> - ประเภทอ่านจาก `Commons.getAssets(true)` (`Assets[ชื่อ].Value`) แถวสูตรโชว์ประเภท, LV (ถ้ามี `LVL`) หรือ Skill (ถ้ามี `Skill`), และ BOUND ถ้ามี `Bound` (เทรดไม่ได้)
-> - แท็บ **RECIPE**: รายละเอียด + DMG / DEF / DEX (ถ้ามี) + TRADEABLE/BOUND + วัตถุดิบ (กดดูว่าทำจากอะไร)
-> - **CRAFT NOW**: slider + ช่องพิมพ์จำนวน + ปุ่ม MAX + ปุ่ม CRAFT สูงสุด = จำนวนที่วัตถุดิบในกระเป๋าพอ (หลังหัก Material Reserve, ไม่เกิน 500 ชิ้นในกระเป๋า)
->   กด CRAFT = สั่งคราฟสูตรนั้น N ชิ้นทันที ทำก่อน Recipe Priority และทำได้แม้ปิด Auto Smithing จบเองเมื่อครบ / วัตถุดิบหมด / fail 3 ครั้ง / กด CANCEL
-> - แท็บ **PRIORITY**: Recipe Priority ตัวเดียวกับในแท็บ Crafting (แก้ที่ไหนก็ตรงกัน) ปุ่ม ADD/REMOVE ในแท็บ RECIPE ยังใช้ได้
-> - ไฟล์ใหม่ `Features/SmithingDetail.lua` (แท็บ RECIPE) แยกจาก `SmithingBrowser.lua`
+> **Done (v2.79, Phase 1):** Farming tab → **Mob Gather** section (`MobGather.lua`), toggle **Gather Mobs** (saved in the profile, default off)
+> - **Min Mobs** (2–8, default 3) / **Max Mobs** (2–10, 5) / **Gather Radius** (15–80, 40) + a status line
+> - IDLE: look for a group of attackable mobs (in Enemy Priority, inside the farmzone, not being attacked by another player) of at least Min Mobs within the Gather Radius
+>   If there are not enough it farms normally; below 50% HP (`COMBAT_SKILL_MIN_HP_PERCENT`) it does not start gathering
+> - TAG: run in and hit each mob once so it follows (mobs whose `LastAttacker` is already us are skipped), nearest mob first, at most 6 s per mob
+> - KITE: back off 12 studs from the group (inside the farmzone, not a deadzone/water, clear path) and wait for the mobs to come within skill range (15), at most 4 s
+> - BURST: face the group and fire the skill as soon as it is ready (waits at most 4 s), then normal combat keeps hitting
+> - FIGHT: the round ends when the gathered mobs die or are all lost (further than 35 studs for 3 s = lost) or after 25 s, then it rests 4 s before the next round
+> - Retreat on low HP / dodging mob skills / Auto Block / walking waypoints always take priority; entering a duel cancels the round
+> - Still to check in game: how far mobs follow (leash), whether the mobs are faster than us, how large the skill's AoE radius is (the current values are cautious)
 
-### [x] Pinned Items: เปิดจากแท็บ Status แทนปุ่มลอย
-> ทำแล้ว (v2.88): ปิด Pinned Items (×) แล้วไม่มีปุ่ม "◇ OPEN" ลอยค้างบนจอแล้ว เปิดกลับได้จาก toggle **Show Pinned Items** ในแท็บ Status
-> - จำไว้ว่าเปิดหรือปิดอยู่ (เก็บใน `PinnedItems.json` พร้อมรายการของ)
+### [x] Smithing: Recipe Browser can be resized and minimised
 
-### [x] Auto Block: ปุ่ม Whitelist Skips Safety
-- คนที่อยู่ใน whitelist แต่เราบล็อกไว้ ไม่ต้องวาร์ปหนี (เหมือนที่เพิ่มใน Iamrich)
+> **Done (v2.80):** done in `UI/Floating.lua`, so both the Recipe Browser and the Server Browser get it
+> - **—** button next to the close button: collapses to just the title bar, press **+** to expand again (minimising the Recipe Browser also closes the floating material tooltip)
+> - Drag the bottom-right corner (**◢**) to resize; the top-left corner stays put, minimum 360×240, maximum not beyond the screen edge
+> - Size and minimised state are remembered for the rest of the script session; closing and reopening looks the same (the first open is centred)
 
-> ทำแล้ว (v2.89): toggle **Whitelist Skips Safety** ในส่วน Auto Block (บันทึกในโปรไฟล์ ค่าเริ่มต้นเปิด)
-> - เปิด: คนใน Block Whitelist ไม่ทำให้ Auto Block วาร์ปหนีแม้บล็อกไว้แล้ว และไม่ทำให้ Leave On Danger Group ออก (นอกจาก Danger Whitelist)
-> - ปิด: คนใน Block Whitelist ที่บล็อกไว้แล้วทำให้วาร์ปหนี (รอ Block Delay ก่อน) ส่วน Leave On Danger Group ใช้ Danger Whitelist อย่างเดียวเหมือนเดิม
-> - Auto Block ไม่เปิดหน้าต่างบล็อกให้คนใน whitelist เสมอ ไม่ว่าจะเปิดหรือปิด toggle นี้
+### [x] Auto Start Game: clicks through the title screen by itself
 
-### [x] UI: Server Browser / Recipe Browser เป็นธีม AIC + คำอธิบายใต้ชื่อปุ่ม + กรอบไฮไลต์ตอน hover
-> ทำแล้ว (v2.90):
-> - หน้าต่างลอย (Server Browser, Recipe Browser) ทำใหม่ให้เหมือนหน้าต่างหลัก: มุมเส้นสีเหลือง, หัวมี ◇ + ชื่อตัวพิมพ์ใหญ่ + คำอธิบายบรรทัดล่าง, ปุ่มเหลี่ยมมีขอบ, ตัวอักษรขนาดเดียวกับหน้าหลัก
-> - ทุกปุ่ม / toggle / slider / dropdown / ช่องพิมพ์ในหน้าหลักมีคำอธิบายบรรทัดเล็กใต้ชื่อว่าใช้ทำอะไร (รายการ priority โชว์ในบรรทัดรอง) แก้คำอธิบายได้ที่ `UI/Descriptions.lua` ไฟล์เดียว
-> - เอาเมาส์ชี้ปุ่ม / toggle / dropdown / ช่องพิมพ์ / แถวในหน้าต่างลอย ขอบจะเปลี่ยนเป็นสีไฮไลต์
+> **Done (v2.86):** toggle **Auto Start Game** (saved in the profile), ported from Iambatman's AutoStartGame
+> - Clicks "CLICK ANYWHERE TO CONTINUE" and then "// START GAME"; it stops by itself once in game and does not watch the screen while playing
+> - The menu is on a SurfaceGui (StarterGui.GameMenu); the option buttons listen for `MouseButton1Down`, so it fires the full signal set just like a real click. Works at any window size
+> - If a positional click is needed, coordinates are converted from the SurfaceGui to screen coordinates; the real mouse is used only while the cursor is already over the button
+> - While the window is minimised: no real mouse is used; if the click does not go through it waits until the window is restored · no title screen for 180 s = stop · 3 failed click rounds = notify and stop
+> - It never clicks Customize / Credits / Reset Data · debug: `getgenv().AICStartGameDebug = true`
 
-### [x] UI: ใช้ font เดียวกันทั้งระบบ
-> ทำแล้ว (v2.91): ทั้ง UI ใช้ Gotham ตัวเดียว (ตัวปกติ GothamMedium, หัวข้อ/ชื่อปุ่มใช้ GothamBold ของ font เดียวกัน) กำหนดที่ `FONT_REGULAR` / `FONT_BOLD` บนสุดของ `UI/Utils.lua` จุดเดียว
-> - ช่องสี/ตั้งค่าใน Settings ที่เคยเป็น font Code เปลี่ยนเป็น font เดียวกันแล้ว
-> - ข้อความที่ไม่ได้ตั้ง font (เดิมได้ font ตั้งต้นของ Roblox) ได้ font ปกติอัตโนมัติ ทั้งหน้าหลัก, Server Browser, Recipe Browser และป้ายลอยของ Debug Visualizer
+### [x] Server: Leave On Danger Group is saved globally and has its own whitelist
 
-### [x] Whitelist: โชว์ชื่อต่อจาก User ID
-> ทำแล้ว (v2.92): Block Whitelist กับ Danger Whitelist โชว์เป็น `UserId  ·  @ชื่อ` (ค่าที่เซฟยังเป็น UserId เหมือนเดิม)
-> - คนที่อยู่ในเซิร์ฟได้ชื่อทันที คนที่ไม่อยู่ถามชื่อจาก Roblox เบื้องหลัง (`GetNameFromUserIdAsync`) ได้มาแล้วรายการวาดใหม่เอง จำไว้ตลอดรอบที่เปิดสคริปต์
-> - ถามชื่อไม่สำเร็จจะโชว์แค่ UserId
+> **Done (v2.87):** the **Leave On Danger Group** toggle and **Danger Whitelist** are kept in `AutoFarmProfiles/Global.json`, shared by every profile and every PlaceId
+> - Loading, creating or importing a profile does not change them, and exporting a profile does not include them (key `r` stays reserved, never reuse it)
+> - Danger Whitelist is separate from Block Whitelist: someone in a danger group who is in the Danger Whitelist no longer forces a server hop, while Block Whitelist no longer affects this feature at all
+> - Add people from the in-server dropdown or type a User ID · removing someone who is in the server hops immediately · the Player Log shows a `[DANGER WL]` tag
+> - On the first run after the update the toggle starts off (the old value in the profile is not migrated), so it has to be turned on once
 
-### [x] UI: เลือก font ได้ใน Configuration
-> ทำแล้ว (v2.93): หน้า Configuration (ปุ่มล่างซ้ายของเมนู) มี dropdown **FONT** รายชื่อ font ทั้งหมดของ Roblox (`Enum.Font`)
-> - เลือกแล้วเปลี่ยนทั้ง UI ทันที: หน้าหลัก, หน้า Configuration, Server Browser, Recipe Browser, Pinned Items, แจ้งเตือน และป้ายลอยของ Debug Visualizer ตัวหนายังเป็นตัวหนา (ถ้า font นั้นมีตัวหนา)
-> - ข้อความที่สร้างใหม่ทีหลังก็ใช้ font ที่เลือก · เซฟแบบ global ใน `Global.json` (`UI_FONT`) ใช้ทุกโปรไฟล์ เปิดสคริปต์ใหม่ยังเป็น font เดิม
-> - กด **RESET DEFAULT** กลับเป็น Gotham
+### [x] Server: Danger Group accepts several group IDs
 
-### [x] กันการรันสคริปต์ซ้ำ (Re-execution guard)
-- execute ซ้ำแล้วต้องไม่ทำงานซ้อนกัน 2 ชุด (ทำใน Iamrich ก่อนแล้ว)
+> **Done (v2.88):** the **Danger Groups** list in the Server tab: type a Group ID and press Add Group ID (remove / drag to reorder); being in any of the groups hops the server
+> - Saved globally in `Global.json` like the toggle and Danger Whitelist (`DANGER_GROUP_IDS`); the default contains the original 5928691
+> - The **Leave On Danger Group** toggle still defaults to off · Danger Whitelist is still separate from Block Whitelist
+> - Editing the group list re-checks everyone in the server immediately · the notification tells you which group the person was found in
 
-> ทำแล้ว (v2.94): execute ซ้ำ = หยุดรอบเก่าก่อนแล้วค่อยโหลดรอบใหม่ (เก็บรอบปัจจุบันใน `getgenv().AICSession`)
-> - รอบเก่าหยุด: Heartbeat (ฟาร์ม/ขุด/ตีเหล็ก ทั้งหมด), สั่งตัวละครหยุดเดิน, ลูป Anti AFK, ลูป Auto Start Game, ตัด connection ทั้งหมด, ลบโฟลเดอร์ `AutoFarmDebug` และหน้าต่าง
-> - เซฟโปรไฟล์ที่ค้างอยู่ทันที แล้วรอบเก่าเซฟไม่ได้อีก (ไม่เซฟทับรอบใหม่)
-> - ถ้ามี AIC เวอร์ชันก่อน v2.94 รันอยู่ (หยุดจากที่นี่ไม่ได้) รอบใหม่จะไม่เริ่ม และแจ้งให้ rejoin
-> - ยังไม่มีปุ่ม Unload
+### [x] Smithing: craft from the Recipe Browser in a single window + filter by category
 
-### [x] Combat: ปรับระยะสู้ตอนปิด Safe Combat ได้
-> ทำแล้ว (v2.97): slider **Close Combat Range** ในส่วน Target (ใต้ Safe Enemy Range) บันทึกในโปรไฟล์ (`CLOSE_COMBAT_RANGE`) ค่าเริ่มต้น 6 studs ปรับได้ 4–12
-> - ใช้ตอนปิด Safe Combat: ยืนตีอยู่กับที่ (CLOSE HOLD) เมื่ออยู่ในระยะนี้ และจุดยืนที่ลองคือ ระยะ-2 / ระยะ-1 / ระยะ (ไม่ใกล้กว่า 4 studs `CLOSE_COMBAT_MIN` เพื่อไม่ทับตัวมอน)
-> - ค่า 6 = เหมือนเดิมทุกอย่าง (4 / 5 / 6) · ไม่เกิน 12 = ระยะตีของเรา (`PLAYER_ATTACK_DISTANCE`) · logic combat เหมือนเดิม
+> **Done (v2.88):** the Recipe Browser was rewritten so one window is enough; no need to keep the main window open next to it
+> - Left: search field (recipe or material name) + item-category buttons (ALL / Weapon / ... with counts) + **READY ONLY** (only what can be crafted right now)
+> - The category is read from `Commons.getAssets(true)` (`Assets[name].Value`); each recipe row shows the category, LV (if it has `LVL`) or Skill (if it has `Skill`), and BOUND if it has `Bound` (not tradeable)
+> - **RECIPE** tab: details + DMG / DEF / DEX (if any) + TRADEABLE/BOUND + materials (click one to see what it is made from)
+> - **CRAFT NOW**: slider + number field + MAX button + CRAFT button; the maximum is how many the materials in the inventory allow (after subtracting Material Reserve, at most 500 items in the inventory)
+>   CRAFT orders N of that recipe immediately, runs before Recipe Priority and works even with Auto Smithing off; it ends by itself when done / materials run out / 3 failures / CANCEL
+> - **PRIORITY** tab: the same Recipe Priority as the Crafting tab (editing either one updates both); the ADD/REMOVE buttons in the RECIPE tab still work
+> - New file `Features/SmithingDetail.lua` (the RECIPE tab), split out of `SmithingBrowser.lua`
 
-### [x] Combat: มี Character.NoDamage อย่าพึ่งเข้าไปตี เดินวนรอบเป้าก่อน
-> ทำแล้ว (v2.97): ตอนตัวเรามี `NoDamage` (ตีไม่เข้า) จะไม่วิ่งเข้าไปตี แต่เดินวนรอบเป้าแทน (`AICCombat.OrbitTarget`) จน `NoDamage` หายแล้วค่อยเข้าไปสู้ตามปกติ
-> - วนห่างเป้านอกระยะดาบของมันเหมือน Safe Combat (ไม่ใกล้กว่าระยะตี 12 studs) + 2 studs (`ORBIT_PADDING`) หันหน้าเข้าหาเป้าตลอด
-> - ทางข้างหน้าออกนอก farm zone / ลง deadzone / น้ำ / มีกำแพง → กลับทิศวน (สลับได้ทุก 1.5 วิ `ORBIT_FLIP_COOLDOWN`) · เดินหลบสิ่งกีดขวางด้วยตัวไล่เป้าเดิม
-> - ระหว่างนี้ไม่ตี · FARM STATE ขึ้น `NO DAMAGE, CIRCLING` · ถอยตอนเลือดต่ำ / หลบสกิลมอนยังทำงานก่อนเหมือนเดิม
-> - ใช้กับการสู้หลักของ Auto Farm (ไม่รวม Gather Mobs / ป้องกันตัวตอนขุด)
+### [x] Pinned Items: open it from the Status tab instead of a floating button
 
-### [x] Combat: Duel สู้แบบเดียวกับมอนที่เราตีอยู่ (อ้อมไปตีข้างหลัง)
-> ทำแล้ว (v2.97): คู่ duel ถูกปฏิบัติเหมือนมอนที่ `LastAttacker.Value` เป็นตัวเรา
-> - เดิมกับผู้เล่นจะข้ามจุดยืนที่อยู่เลยตัวเขาไป (กลัวเดินวนไม่จบเพราะผู้เล่นหันตามเรา) เลยสู้แต่ด้านหน้า ตอนนี้คู่ duel ใช้จุดหลังก่อน แล้วข้าง ๆ เหมือนมอน เดินอ้อมตัวไปด้วยตัวไล่เป้าเดิม
-> - Safe Enemy Range กับคู่ duel ก็เลือกด้านหลังก่อน (เดิมเลือกหนีออกจากดาบก่อน เพราะผู้เล่นไม่มี LastAttacker)
-> - หลบดาบ (Blade Push / ระยะดาบ) และการวนตามตอนเป้าหันมาหาใช้เหมือนมอน · ผู้เล่นที่ไม่ได้ duel กับเรายังสู้แบบเดิม
+> **Done (v2.88):** closing Pinned Items (×) no longer leaves a "◇ OPEN" button floating on screen; reopen it with the **Show Pinned Items** toggle in the Status tab
+> - Whether it is open or closed is remembered (stored in `PinnedItems.json` together with its contents)
 
-### [x] Combat: Retreat At HP% ตั้งต่ำสุดได้ 0
-> ทำแล้ว (v2.97): slider **Retreat At HP%** เลื่อนได้ 0–80 (เดิม 30–80) · ตั้ง 0 = ไม่ถอยเพราะเลือดต่ำเลย (หลบสกิลมอนยังทำงานเหมือนเดิม)
+### [x] Auto Block: Whitelist Skips Safety button
 
-### [x] Auto Start Game: ลองกดซ้ำ 10 รอบ จากเดิม 3 รอบ
-> ทำแล้ว (v2.99): `MAX_FAILED_ROUNDS` 3 → 10
-> - ตอนย่อหน้าต่างจะลองกดได้ 10 รอบก่อนหยุดรอให้เปิดหน้าต่างกลับมา · log แจ้งทุกรอบจนถึงรอบที่ 10 จากนั้นทุก 10 รอบ (ปกติยังลองต่อไปเรื่อยๆ จนผ่านหน้าจอเหมือนเดิม)
+- Someone who is in the whitelist but is blocked by us must not cause a warp away (the same addition as in Iamrich)
 
-### [x] Mob Dictionary: เปิดดูข้อมูลมอนแต่ละตัว
-> ทำแล้ว (v3.00): ปุ่ม **Open Mob Dictionary** ท้ายส่วน Targeting (แท็บ Farming) เปิดหน้าต่างแยกแบบ Recipe Browser
-> - ข้อมูลมาจาก dictionary ของเกม (`ReplicatedStorage.BuildAssets:InvokeServer("MobDict")`) โหลดครั้งแรกที่เปิด กด **RELOAD** เพื่อโหลดใหม่
-> - ซ้าย: รายชื่อมอน + บอส เรียงเลือดน้อยไปมาก ค้นหาชื่อได้ · ชิป ALL / MOBS / BOSSES / LIVE (เฉพาะตัวที่มีในเซิร์ฟตอนนี้) · แถบบางใต้ชื่อ = ระดับอันตราย
-> - ขวา: ชื่อ + ป้าย MOB/BOSS + จำนวนที่มีในเซิร์ฟ (อัปเดตทุก 1 วิ) + status effect · มาตรวัด THREAT 5 ขั้น (LOW → EXTREME จากอันดับเลือด/ดาเมจเทียบมอนทุกตัว)
-> - ตัวเลขใหญ่: HP, WALK SPEED, ค่าโจมตีตัวแรก พร้อมอันดับ · ค่าตัวเลขทุกค่าเป็นแถบเทียบกับตัวที่สูงสุดในประเภทเดียวกัน (มอนเทียบมอน บอสเทียบบอส) แบ่งกลุ่ม BODY / COMBAT / REWARDS / OTHER · ค่าที่ไม่ใช่ตัวเลขเป็นป้าย TRAITS
-> - ปุ่ม **ADD TO ENEMY PRIORITY** (ต้องมีโปรไฟล์) และ **COPY NAME**
+> **Done (v2.89):** toggle **Whitelist Skips Safety** in the Auto Block section (saved in the profile, default on)
+> - On: someone in the Block Whitelist does not make Auto Block warp away even if they are blocked, and does not make Leave On Danger Group leave either (except through Danger Whitelist)
+> - Off: someone in the Block Whitelist who is already blocked makes it warp away (after Block Delay), while Leave On Danger Group uses Danger Whitelist only, as before
+> - Auto Block never opens the block window for someone in the whitelist, whether this toggle is on or off
 
-### [x] Mob Dictionary: เรทดรอปและคำนวณ Luck
-> ทำแล้ว (v3.01): การ์ด **DROPS PER KILL** ในหน้า Mob Dictionary คำนวณแบบเดียวกับ server (`AwardPlayer`)
-> - ดรอปอ่านจาก `Config.MaxDrops` ของมอนตัวที่เกิดในเซิร์ฟ (MobDict ไม่ส่งมา) ต้องเคยมีมอนตัวนั้นในเซิร์ฟก่อน จำไว้ตลอดรอบที่รัน
-> - แต่ละไอเทม: ทอย `Value` รอบ โอกาส `100/Rarity`% ต่อรอบ ถ้ายังไม่ได้ของ รอบที่ N คูณ N · บวก Luck `min(Luck, 500)/100`% (cap จาก `CoreCommons.PHYSICAL_STAT_MAX`) · สุ่ม 1–100 ปัดลง
-> - แสดง % ได้อย่างน้อย 1 ชิ้นต่อการฆ่า, ฆ่าเฉลี่ยกี่ตัวถึงได้, จำนวนเฉลี่ยต่อการฆ่า, แถบสว่าง = มี Luck / เทา = ไม่มี Luck, ป้าย RARE (1 ใน 10 ขึ้นไป)
-> - บรรทัด LUCK บอกค่า Luck ของเราและ % ที่บวกให้ทุกรอบ อัปเดตเองเมื่อ Luck เปลี่ยน · ไม่รวมไอเทมจาก event
-> - แยกส่วนรายละเอียดไปไฟล์ `Features/MobDetail.lua` · รายการซ้ายขึ้น LV และจำนวนดรอปที่รู้แล้ว
+### [x] UI: Server Browser / Recipe Browser in the AIC theme + a description under every control name + a highlight border on hover
 
-### [x] Refactor: รวมไฟล์ UI ของ Mining / Smithing เข้ากับตัวฟีเจอร์
-> ทำแล้ว (v3.03): `AutoMiningUI.lua` รวมเข้า `AutoMining.lua` และ `AutoSmithingUI.lua` รวมเข้า `AutoSmithing.lua` (mining กับ smithing ยังแยกไฟล์กันเหมือนเดิม)
-> - หน้าตาและตำแหน่งปุ่มในแท็บ Mining / Crafting เหมือนเดิมทุกอย่าง
-> - แท็บ Crafting สร้างใน `BuildLateUI` ของ AutoSmithing เพราะ Recipe Browser (SmithingBrowser → SmithingDetail) ต้องพึ่ง AutoSmithing ก่อน ถ้าสร้างใน Start จะวนพึ่งกันเอง
+> **Done (v2.90):**
+> - The floating windows (Server Browser, Recipe Browser) were rebuilt to match the main window: yellow-cornered frame, title with ◇ + uppercase name + a description line below, bordered square buttons, text the same size as the main window
+> - Every button / toggle / slider / dropdown / text field in the main window has a small description line under its name saying what it does (priority lists show it on the second line); edit the wording in the single file `UI/Descriptions.lua`
+> - Hovering a button / toggle / dropdown / text field / row in a floating window turns its border to the accent colour
 
-### [x] Asset Explorer: เปิดดูข้อมูลไอเทมทุกชิ้น
-> ทำแล้ว (v3.06): ปุ่ม **Open Asset Explorer** ในแท็บ Crafting (ใต้ Refresh Recipes) เปิดหน้าต่างแบบ Mob Dictionary
-> - ข้อมูลจาก assets ของเกม (`CoreCommons.getAssets` ตัวเดียวกับที่ Recipe Browser ใช้) ไม่ยิง remote · กด **RELOAD** อ่านใหม่
-> - ซ้าย: ไอเทมทั้งหมดเรียงตามประเภท แล้วตามเลเวล · ค้นหาชื่อ / ประเภท / ค่าที่เป็นข้อความ · ชิป ALL / OWNED / แยกตามประเภท · แถบใต้ชื่อ = DMG/DEF/DEX ที่ดีที่สุดเทียบกับประเภทเดียวกัน
-> - ขวา: ประเภท, LV, BOUND/TRADEABLE, UNOBTAINABLE, ต้องมี pass/badge/group, ซื้อด้วย event currency, จำนวนที่มี · ตัวเลขใหญ่ DMG/DEF/DEX พร้อมอันดับ
-> - **VALUE**: ราคาซื้อ (`Worth`) และราคาขาย 35% (45% ถ้ามี Agility pass) ตามโค้ด server · ไอเทมที่ต้องใช้ pass/badge/group/event currency ขายไม่ได้
-> - **HOW TO GET**: สูตรที่ทำได้ (วัตถุดิบเทียบของในกระเป๋า) + มอนที่ดรอป พร้อม % ต่อการฆ่า (มอนที่เคยเจอในเซิร์ฟรอบนี้ จาก Mob Dictionary) · **USED IN**: สูตรที่ใช้ไอเทมนี้
-> - ทุกค่าตัวเลขเป็นแถบเทียบกับตัวที่ดีที่สุดในประเภท, ค่าอื่นเป็นป้าย, status effect · ปุ่ม **COPY NAME** / **OPEN RECIPE** (เปิด Recipe Browser ที่สูตรนั้น)
-> - แยกชิ้นส่วนที่ใช้ร่วมกับ Mob Dictionary เป็น `UI/DetailKit.lua` (การ์ด ป้าย แถบ ตัวเลข) และ `UI/BrowserShell.lua` (หน้าต่าง ค้นหา ชิป รายการ) · Mob Dictionary เปลี่ยนไปใช้สองไฟล์นี้ หน้าตาเหมือนเดิม
+### [x] UI: one font across the whole system
 
-### [x] Teleport Navigate: วาร์ปตามประตู และวาร์ปไป Waypoint ของเกม
-> ทำแล้ว (v3.11): แท็บใหม่ **Teleport** (ต่อจาก Server) ไฟล์ `Features/TeleportNavigate.lua` ใช้ remote `TeleportEvent` ของเกมเหมือน TeleportSystem ของ Iambatman
-> - **Door Teleport**: เลือกจุด T1 / T2 ของประตูทุกบานใน `workspace.Interactions` จาก dropdown แล้วกด **Teleport To Door**
-> - **Waypoint Teleport**: เลือก waypoint จาก `workspace.Waypoints` (มี #0 Default เสมอ) แล้วกด **Teleport To Waypoint**
-> - ช่อง **Waypoint Number** พิมพ์เลขแล้วกด **Teleport To Number** วาร์ปไป WP นั้นทันที ไม่ต้องรอให้โหลดเข้า folder
-> - รายการประตู / waypoint อัปเดตเองเมื่อ folder มีของเพิ่มหรือหายไป หรือกด **Refresh Doors** / **Refresh Waypoints**
+> **Done (v2.91):** the whole UI uses a single Gotham (normal text GothamMedium, headings/button names GothamBold from the same font), set in one place: `FONT_REGULAR` / `FONT_BOLD` at the top of `UI/Utils.lua`
+> - Colour/setting fields in Settings that used to be the Code font now use the same font
+> - Text that never had a font set (it previously took Roblox's default) now gets the normal font automatically, across the main window, Server Browser, Recipe Browser and the Debug Visualizer floating labels
 
-### [x] Quest: ปุ่ม Assign Quest + ช่องใส่ Quest ID
-> ทำแล้ว (v3.17): แท็บใหม่ **Quest** (ต่อจาก Teleport) ไฟล์ `Features/QuestAssign.lua`
-> - พิมพ์ ID ในช่อง **Quest ID** แล้วกด **Assign Quest** → ส่ง `QuestEvent:FireServer("AssignQuest", ID)` (หา `QuestEvent` ใน ReplicatedStorage แบบ recursive)
-> - ช่องว่างหรือหา remote ไม่เจอจะแจ้งเตือน ไม่ส่งอะไรออกไป
+### [x] Whitelist: show the name next to the User ID
 
-### [x] Quest Helper: ESP บอกตำแหน่งของ/จุดที่เควสให้หา
-> ทำแล้ว (v3.17): ส่วน **Quest Helper** ในแท็บ Quest ไฟล์ `Features/QuestHelper.lua`
-> - พิมพ์ชื่อของ/จุดในช่อง **Quest Targets** (หลายอันคั่นด้วย `,` ตัวพิมพ์เล็กใหญ่ไม่สำคัญ) แล้วเปิด **Quest ESP**
-> - หา Model / Part ใน workspace ที่ชื่อตรง หรือ part ที่มี ProximityPrompt ขึ้นชื่อนั้น (ObjectText / ActionText)
-> - ทุกอันได้ป้ายชื่อ + ระยะ (studs) มองทะลุกำแพง · ใกล้สุด 20 อันได้ Highlight · อันที่ใกล้ที่สุดเป็นสีเขียว อื่นๆ สีเหลือง
-> - ของที่โหลดเข้ามาทีหลัง (streaming) ติดป้ายเอง · กด **Rescan Quest Targets** เพื่อหาใหม่ทั้งแผนที่
-> - แก้ (v3.18): หาเฉพาะใน folder `QuestItems` ของ workspace · ชื่อของและชื่อที่พิมพ์ถูกตัดเหลือแค่ตัวอักษรกับตัวเลขแล้วทำเป็นตัวพิมพ์เล็กทั้งคู่ก่อนเทียบ เช่นพิมพ์ `old key` เจอ `Old_Key` / `OldKey`
-> - เพิ่ม (v3.19): toggle **Show All Quest Items** ติดป้าย ESP ให้ของทุกชิ้นใน `QuestItems` ไม่ต้องพิมพ์ชื่อ (ใช้ร่วมกับชื่อที่พิมพ์ได้) · ป้ายสูงสุด 200 อัน, Highlight 20 อันที่ใกล้สุดเหมือนเดิม
-> - ยังไม่ดึงเป้าจากเควสอัตโนมัติ: ไม่รู้ว่าเกมเก็บข้อมูลเควสฝั่ง client ไว้ตรงไหน → กด **Copy Quest Info** ตอนรับเควสอยู่ (copy + บันทึก `AutoFarmProfiles/QuestDump.txt`) แล้วส่งมาให้ดู จะทำให้ใส่เป้าเองได้
+> **Done (v2.92):** Block Whitelist and Danger Whitelist show `UserId  ·  @name` (the saved value is still the UserId, as before)
+> - Someone in the server gets a name immediately; for everyone else the name is fetched from Roblox in the background (`GetNameFromUserIdAsync`) and the list redraws itself once it arrives, remembered for the rest of the script session
+> - If the name lookup fails only the UserId is shown
 
-### [x] Mob Dictionary: โชว์ AwardParam ของมอนที่ AwardType = HealthPercent
-> ทำแล้ว (v3.17): มอนที่ `Config.AwardType` เป็น `"HealthPercent"` จะได้รางวัลก็ต่อเมื่อตีไปอย่างน้อย `AwardParam`% ของเลือดมอน (attribute บน AwardType)
-> - dictionary จากเซิร์ฟไม่ส่ง attribute มา เลยอ่านจากตัวมอนที่เกิดอยู่ใน `workspace.Mobs` (เหมือน Drops) ต้องเป็นตัวเลขเท่านั้น
-> - โชว์เป็น stat **AWARD MIN HEALTH %** ในกลุ่ม REWARDS ของหน้ารายละเอียด (เทียบกับมอนตัวอื่นเป็นแถบ) ขึ้นเองเมื่อเจอตัวจริง
-> - บันทึกใน `AutoFarmProfiles/MobDrops.json` (ช่อง `AwardParams`) รอบต่อไปโชว์ได้เลยไม่ต้องรอเจอมอนอีก
+### [x] UI: font selector in Configuration
+
+> **Done (v2.93):** the Configuration page (button at the bottom left of the menu) has a **FONT** dropdown listing every Roblox font (`Enum.Font`)
+> - Picking one changes the whole UI at once: main window, Configuration page, Server Browser, Recipe Browser, Pinned Items, notifications and the Debug Visualizer floating labels; bold stays bold (if that font has a bold variant)
+> - Text created later also uses the selected font · saved globally in `Global.json` (`UI_FONT`), shared by every profile, so a fresh start keeps the same font
+> - **RESET DEFAULT** goes back to Gotham
+
+### [x] Re-execution guard
+
+- Running it again must not leave two copies working at once (done in Iamrich first)
+
+> **Done (v2.94):** running it again stops the previous run before the new one loads (the current run is kept in `getgenv().AICSession`)
+> - Stopping the old run: Heartbeat (farming/mining/smithing, all of it), tells the character to stop moving, the Anti AFK loop, the Auto Start Game loop, disconnects every connection, destroys the `AutoFarmDebug` folder and the window
+> - Pending profile saves are written immediately, and the old run cannot save after that (it never overwrites the new run)
+> - If an AIC older than v2.94 is running (it cannot be stopped from here) the new run does not start and asks for a rejoin
+> - There is still no Unload button
+
+### [x] Combat: adjustable fighting distance when Safe Combat is off
+
+> **Done (v2.97):** slider **Close Combat Range** in the Target section (below Safe Enemy Range), saved in the profile (`CLOSE_COMBAT_RANGE`), default 6 studs, adjustable 4–12
+> - Applies when Safe Combat is off: it stands and fights in place (CLOSE HOLD) while inside this range, and the standing spots it tries are range-2 / range-1 / range (never closer than 4 studs, `CLOSE_COMBAT_MIN`, so it does not overlap the mob)
+> - A value of 6 behaves exactly as before (4 / 5 / 6) · never more than 12 = our attack range (`PLAYER_ATTACK_DISTANCE`) · the combat logic itself is unchanged
+
+### [x] Combat: with Character.NoDamage, do not attack yet — circle the target first
+
+> **Done (v2.97):** when we have `NoDamage` (attacks do not register) it no longer runs in to attack, and circles the target instead (`AICCombat.OrbitTarget`) until `NoDamage` clears, then fights normally
+> - It circles outside the target's blade range like Safe Combat (never closer than the 12-stud attack range) + 2 studs (`ORBIT_PADDING`) and faces the target the whole time
+> - If the way ahead leaves the farmzone / drops into a deadzone / is water / hits a wall → it reverses the circle (allowed to flip every 1.5 s, `ORBIT_FLIP_COOLDOWN`) · it walks around obstacles with the same target-chasing logic
+> - It does not attack during this · FARM STATE shows `NO DAMAGE, CIRCLING` · retreating at low HP / dodging mob skills still take priority as before
+> - Applies to Auto Farm's main combat (not Gather Mobs / self-defence while mining)
+
+### [x] Combat: duel opponents are fought like a mob we are attacking (walk around and hit them from behind)
+
+> **Done (v2.97):** a duel partner is treated like a mob whose `LastAttacker.Value` is us
+> - Against players it used to skip the standing spots past their body (afraid of circling forever because the player turns to follow us), so it only fought from the front; now a duel partner uses the behind spot first, then the side spots, like a mob, walking around them with the same target-chasing logic
+> - Safe Enemy Range also prefers the behind spot for a duel partner (it used to prefer backing out of blade range, because players have no `LastAttacker`)
+> - Blade dodging (Blade Push / blade range) and the circling when the target turns to face us work as they do for mobs · players who are not duelling us are still fought the old way
+
+### [x] Combat: Retreat At HP% can be set as low as 0
+
+> **Done (v2.97):** the **Retreat At HP%** slider now goes 0–80 (was 30–80) · setting 0 means it never retreats for low HP (dodging mob skills still works as before)
+
+### [x] Auto Start Game: retry pressing 10 rounds instead of 3
+
+> **Done (v2.99):** `MAX_FAILED_ROUNDS` 3 → 10
+> - While the window is minimised it now retries up to 10 rounds before stopping to wait for the window to come back · it logs every round until round 10, then every 10 rounds (normally it still keeps retrying until the screen is passed, as before)
+
+### [x] Mob Dictionary: inspect each mob's data
+
+> **Done (v3.00):** the **Open Mob Dictionary** button at the end of the Targeting section (Farming tab) opens a separate window in the Recipe Browser style
+> - The data comes from the game's dictionary (`ReplicatedStorage.BuildAssets:InvokeServer("MobDict")`); it is loaded the first time the window opens and **RELOAD** loads it again
+> - Left: the list of mobs + bosses sorted from least to most HP, searchable by name · chips ALL / MOBS / BOSSES / LIVE (only those currently in the server) · the thin bar under each name = threat level
+> - Right: name + MOB/BOSS label + how many are in the server (updated every 1 s) + status effects · a 5-step THREAT gauge (LOW → EXTREME, from the HP/damage rank against every mob)
+> - Big numbers: HP, WALK SPEED, first attack value, each with its rank · every numeric value is a bar compared against the highest of the same type (mobs against mobs, bosses against bosses), grouped as BODY / COMBAT / REWARDS / OTHER · values that are not numbers show as TRAITS labels
+> - Buttons **ADD TO ENEMY PRIORITY** (a profile is required) and **COPY NAME**
+
+### [x] Mob Dictionary: drop rates and Luck calculation
+
+> **Done (v3.01):** the **DROPS PER KILL** card on the Mob Dictionary page calculates the way the server does (`AwardPlayer`)
+> - Drops are read from `Config.MaxDrops` of the mob spawned in the server (MobDict does not send it), so that mob must have spawned in the server at least once; it is remembered for the whole run
+> - Per item: it rolls `Value` times with a `100/Rarity`% chance per roll, and if the item still has not dropped, roll N is multiplied by N · plus Luck `min(Luck, 500)/100`% (capped by `CoreCommons.PHYSICAL_STAT_MAX`) · rolls 1–100, rounded down
+> - It shows the % chance of at least 1 drop per kill, how many kills on average to get one, the average count per kill, a bright bar = Luck included / grey = no Luck, and a RARE label (1 in 10 or rarer)
+> - The LUCK line shows our Luck value and the % it adds to every roll, and updates itself when Luck changes · items from events are excluded
+> - The detail view was split out into `Features/MobDetail.lua` · the left list shows LV and the number of drops already known
+
+### [x] Refactor: merge the Mining / Smithing UI files into their features
+
+> **Done (v3.03):** `AutoMiningUI.lua` was merged into `AutoMining.lua` and `AutoSmithingUI.lua` into `AutoSmithing.lua` (mining and smithing still live in separate files)
+> - The layout and button positions in the Mining / Crafting tabs are exactly as before
+> - The Crafting tab is built in AutoSmithing's `BuildLateUI`, because the Recipe Browser (SmithingBrowser → SmithingDetail) depends on AutoSmithing first; building it in Start would create a circular dependency
+
+### [x] Asset Explorer: inspect every item's data
+
+> **Done (v3.06):** the **Open Asset Explorer** button in the Crafting tab (below Refresh Recipes) opens a window like Mob Dictionary
+> - The data comes from the game's assets (`CoreCommons.getAssets`, the same one the Recipe Browser uses); no remote call · press **RELOAD** to read it again
+> - Left: all items sorted by type, then by level · search by name / type / text values · chips ALL / OWNED / one per type · the bar under each name = best DMG/DEF/DEX compared with the same type
+> - Right: type, LV, BOUND/TRADEABLE, UNOBTAINABLE, requires a pass/badge/group, bought with event currency, the amount owned · big DMG/DEF/DEX numbers with their ranks
+> - **VALUE**: buy price (`Worth`) and sell price at 35% (45% with the Agility pass) as in the server code · items that require a pass/badge/group/event currency cannot be sold
+> - **HOW TO GET**: the recipes you can make (materials compared against your inventory) + the mobs that drop it, with the % per kill (mobs seen in the server this run, from Mob Dictionary) · **USED IN**: the recipes that use this item
+> - Every numeric value is a bar compared against the best of its type, other values show as labels, plus status effects · buttons **COPY NAME** / **OPEN RECIPE** (opens the Recipe Browser at that recipe)
+> - The parts shared with Mob Dictionary were split into `UI/DetailKit.lua` (cards, labels, bars, numbers) and `UI/BrowserShell.lua` (window, search, chips, list) · Mob Dictionary now uses those two files and looks the same as before
+
+### [x] Teleport Navigate: warp through doors and to the game's waypoints
+
+> **Done (v3.11):** a new **Teleport** tab (after Server), file `Features/TeleportNavigate.lua`, using the game's `TeleportEvent` remote like Iambatman's TeleportSystem
+> - **Door Teleport**: pick the T1 / T2 point of any door in `workspace.Interactions` from a dropdown, then press **Teleport To Door**
+> - **Waypoint Teleport**: pick a waypoint from `workspace.Waypoints` (there is always a #0 Default), then press **Teleport To Waypoint**
+> - The **Waypoint Number** field: type a number and press **Teleport To Number** to warp to that WP immediately, without waiting for it to stream into the folder
+> - The door / waypoint lists update themselves when the folder gains or loses objects, or press **Refresh Doors** / **Refresh Waypoints**
+
+### [x] Quest: Assign Quest button + Quest ID field
+
+> **Done (v3.17):** a new **Quest** tab (after Teleport), file `Features/QuestAssign.lua`
+> - Type an ID in the **Quest ID** field and press **Assign Quest** → sends `QuestEvent:FireServer("AssignQuest", ID)` (it finds `QuestEvent` recursively in ReplicatedStorage)
+> - An empty field or a remote that cannot be found raises a notice and nothing is sent
+
+### [x] Quest Helper: ESP showing where the quest's item/spot is
+
+> **Done (v3.17):** the **Quest Helper** section in the Quest tab, file `Features/QuestHelper.lua`
+> - Type item/spot names in the **Quest Targets** field (separate several with `,`, case-insensitive) and turn on **Quest ESP**
+> - It finds Models / Parts in the workspace whose name matches, or parts with a ProximityPrompt showing that name (ObjectText / ActionText)
+> - Each one gets a name label + distance (studs) drawn through walls · the closest 20 get a Highlight · the nearest is green, the others yellow
+> - Objects that stream in later get their label by themselves · press **Rescan Quest Targets** to search the whole map again
+> - Fixed (v3.18): it only searches inside the `QuestItems` folder in the workspace · both the item's name and the typed name are reduced to letters and digits only and lowercased before comparing, so typing `old key` matches `Old_Key` / `OldKey`
+> - Added (v3.19): toggle **Show All Quest Items** labels every item in `QuestItems` with ESP without typing a name (it works together with the typed names) · at most 200 labels, the closest 20 Highlights as before
+> - Quest targets are still not pulled automatically: it is not known where the game keeps quest data client-side → press **Copy Quest Info** while you are accepting a quest (it copies and saves `AutoFarmProfiles/QuestDump.txt`), then send that in and the targets can be entered by hand
+
+### [x] Mob Dictionary: show AwardParam for mobs whose AwardType = HealthPercent
+
+> **Done (v3.17):** a mob whose `Config.AwardType` is `"HealthPercent"` only gives its reward once you have dealt at least `AwardParam`% of the mob's HP (the attribute on AwardType)
+> - The dictionary from the server does not send the attribute, so it is read from the mob spawned in `workspace.Mobs` (the same way as Drops); only numeric values are accepted
+> - Shown as the stat **AWARD MIN HEALTH %** in the REWARDS group of the detail page (as a bar compared with other mobs), and it appears by itself once the real mob is found
+> - Saved in `AutoFarmProfiles/MobDrops.json` (the `AwardParams` field), so the next run can show it right away without waiting to meet the mob again
 
 ## To Fix
 
-### [x] Waypoints Looped & Paired Farmzone/Waypoint/Targets: เดินกลับไป WP ที่ไม่ได้ Pair
+### [x] Waypoints Looped & Paired Farmzone/Waypoint/Targets: walking back to waypoints that are not paired
 
-> แก้แล้ว (v2.43): เลิกเดินถอย N > N-1 > ... > 1 เพื่อหาเป้า
-> - เดินเส้นทางครบแล้ว จะเดินไป Waypoint ที่ Pair ไว้ที่ใกล้ที่สุด (ถ้าเห็นว่าโซนไหนมีเป้าจะไปโซนนั้นก่อน)
-> - Pair ไว้โซนเดียว: อยู่ในโซนนั้นตลอด ไม่มีมอนก็รอในโซน (Return To Farm Zone / Patrol ใช้เฉพาะโซนนั้น)
-> - Pair ไว้ 2 โซนขึ้นไป: โซนที่อยู่ว่างเกิน 1.5 วินาทีจะนับว่าเคลียร์แล้ว จากนั้นเดินไปโซนที่ Pair ไว้ถัดไป
->   ตามลำดับ Waypoint แล้ววนกลับโซนแรก (ถ้าเห็นว่าโซนไหนมีเป้าจะข้ามไปโซนนั้นก่อน) เช่น WP#33 ↔ WP#39
-> - เดินผ่านเฉพาะ Waypoint ที่อยู่ระหว่างจุดที่ Pair ไว้ เพราะเป็นเส้นทาง จะไม่หยุดสู้ที่จุดพวกนี้
->   และไม่เดินเลยออกไปนอกช่วง Waypoint ที่ Pair ไว้จุดแรกกับจุดสุดท้าย
-- ถ้ามี Farmzone ที่ Pair ไว้แค่ 1 จุด ให้ฟาร์มและอยู่เฉพาะใน Farmzone นั้น ไม่ต้องเดินกลับไป WP อื่น
-- ถ้ามี Farmzone ที่ Pair ไว้ตั้งแต่ 2 จุดขึ้นไป ให้เดินสลับไปมาเฉพาะ Farmzone ที่ Pair กับ Waypoint เท่านั้น
-  - ตัวอย่าง: มี 39 Waypoints และ 2 Farmzone โดย Farmzone#1 Pair กับ WP#33 และ Farmzone#2 Pair กับ WP#39
-  - มอนใน Farmzone#1 ตายหมด → เดินไป Farmzone#2
-  - มอนใน Farmzone#2 ตายหมด → เดินกลับ Farmzone#1
-- ห้ามวนกลับไปยัง Waypoint ที่ไม่ได้ตั้ง Farmzone/Pair ไว้
+- If only one farmzone is paired, farm and stay in that farmzone only; there is no need to walk back to other waypoints
+- If two or more farmzones are paired, alternate only between the farmzones paired with waypoints
+  - Example: 39 waypoints and 2 farmzones, where Farmzone#1 is paired with WP#33 and Farmzone#2 is paired with WP#39
+  - All mobs in Farmzone#1 are dead → walk to Farmzone#2
+  - All mobs in Farmzone#2 are dead → walk back to Farmzone#1
+- Never loop back to a waypoint that has no farmzone/pair set
+
+> **Fixed (v2.43):** no longer walks backwards N > N-1 > ... > 1 looking for a target
+> - Once the route is complete it walks to the nearest paired waypoint (if it sees a zone with a target it goes there first)
+> - One paired zone: it stays in that zone the whole time, and waits inside the zone when there are no mobs (Return To Farm Zone / Patrol apply to that zone only)
+> - Two or more paired zones: a zone that has been empty for more than 1.5 seconds counts as cleared, then it walks to the next paired zone
+>   in waypoint order and loops back to the first (if it sees a zone with a target it skips ahead to that one), e.g. WP#33 ↔ WP#39
+> - It walks only through the waypoints that sit between paired points, because they are just the route, and it does not stop to fight at those points
+>   and never walks outside the range from the first to the last paired waypoint
 
 ### [x] Pinned Items
-- Save across `game.PlaceId`
-- ลาก Pinned Items ออกนอกจอไม่ได้
-- เพิ่มปุ่ม Reset Position ให้ Pinned Items ใน MainUI
 
-> แก้แล้ว: เก็บใน `AutoFarmProfiles/PinnedItems.json` ใช้ร่วมทุก PlaceId (ย้ายของเดิมจากโปรไฟล์มาให้ครั้งแรก),
-> บันทึกตำแหน่งตอนลากเสร็จ, ลากออกนอกจอไม่ได้และดึงกลับเข้าจอเมื่อจอเปลี่ยนขนาด,
-> ปุ่ม **Reset Pinned Items Position** อยู่ที่แท็บ Status
+- Save across `game.PlaceId`
+- Pinned Items cannot be dragged off-screen
+- Add a Reset Position button for Pinned Items in MainUI
+
+> **Fixed:** stored in `AutoFarmProfiles/PinnedItems.json`, shared by every PlaceId (the old per-profile entries were migrated across the first time),
+> the position is saved when the drag ends, it cannot be dragged off-screen and is pulled back on screen when the screen size changes,
+> and the **Reset Pinned Items Position** button is on the Status tab
 
 ### [x] Combat
-- ต่อยกับมอนใน Farmzone แล้วอยู่ๆ ก็ออกนอกฟาร์มโซนหน้าตาเฉย
-- บางทีก็กระโดดหนีเข้า Deadzone
 
-> แก้แล้ว: ทางถอยตอนเลือดต่ำ (`GetRetreatPosition`) ไม่เช็ค Deadzone และทางหนีสำรอง (raw away)
-> ไม่เช็คทั้ง Farmzone และ Deadzone แต่ยังกระโดดตามไป ตอนนี้เช็คทั้งคู่แล้ว
-> ส่วนการหนีออกจาก Deadzone จะเลือกจุดที่อยู่ใน Farmzone ก่อน
+- Fighting mobs in the Farmzone and then it suddenly walks out of the farmzone
+- Sometimes it jumps away into the Deadzone
+
+> **Fixed:** the retreat path at low HP (`GetRetreatPosition`) did not check the Deadzone, and the fallback escape (raw away)
+> checked neither the Farmzone nor the Deadzone yet still jumped after it; both are checked now
+> As for escaping out of a Deadzone, it now prefers a point inside the Farmzone
 
 ### [x] AutoFind
-- เปิดแล้วไม่ยอมตีมอน
 
-> แก้แล้ว: AutoFind ข้ามเส้นทาง Waypoint แต่เงื่อนไขเข้าโจมตียังรอให้เดิน Waypoint ครบก่อน
-> เลยได้แค่กด Interact ไม่ยอมตี
+- Turned on but it will not attack mobs
 
-### [x] เดินออกนอกฟาร์มโซนแล้วยืนนิ่งๆ
+> **Fixed:** AutoFind skips the waypoint route, but the attack condition still waited for the waypoints to be completed
+> so it only pressed Interact and would not attack
 
-> แก้แล้ว:
-> - ล็อกเป้าที่อยู่ไกลเกิน 50 studs (`COMBAT_ENGAGE_MAX_DISTANCE`) แล้วโค้ดส่วนสู้สั่ง `Move(0)` ทับคำสั่งเดินเข้าหาเป้าทุกเฟรม เลยยืนนิ่ง ตอนนี้เดินเข้าหาต่อได้
-> - ถอยตอนเลือดต่ำแล้วไม่มีมอนใกล้ (30 studs) จะยืนรอฮีลตรงนั้นเลย ถ้าอยู่นอกฟาร์มโซนก็ยืนนอกโซนจนเลือดขึ้น ตอนนี้กลับเข้าโซนก่อนแล้วค่อยยืนฮีลในโซน (เฉพาะตอนเดิน Waypoint ครบแล้ว และเปิด Return To Farm Zone)
+### [x] Walks out of the farmzone and stands still
 
-### [x] เปิดสคริปต์ตอนมีเซฟแล้วค้าง
+> **Fixed:**
+> - When it locked a target farther than 50 studs away (`COMBAT_ENGAGE_MAX_DISTANCE`), the combat code's `Move(0)` overwrote the walk-to-target command every frame, so it stood still; it now keeps walking towards the target
+> - Retreating at low HP with no mob nearby (30 studs) made it stand and heal right there, and outside the farmzone it stood outside the zone until HP came back; it now walks into the zone first and only then stands and heals inside it (only once the waypoint route is complete and with Return To Farm Zone on)
 
-> แก้แล้ว: `Dropdown:Set(value, false)` ใน Utils ไม่สนค่า `false` แล้วเรียก callback ทุกครั้ง
-> พอมีโปรไฟล์โหลดอยู่ dropdown **Paired Farm Zone** จะ save → refresh รายการ Waypoint → สร้าง dropdown ใหม่ → Set → callback วนไม่จบ
-> (ไม่มีเซฟจะไม่ค้าง เพราะ callback หยุดที่ "CREATE / LOAD PROFILE FIRST")
-> ตอนนี้ Dropdown/Textbox `Set(value, false)` ไม่เรียก callback เหมือน Toggle/Slider
-> ผลพลอยได้: ตอนเปิดสคริปต์ไม่โหลดโปรไฟล์ซ้ำ 2–3 รอบแล้ว
+### [x] Freezes when starting the script with a saved profile
+
+> **Fixed:** `Dropdown:Set(value, false)` in Utils ignored the `false` value and called the callback every time
+> With a profile loaded, the **Paired Farm Zone** dropdown saved → refreshed the waypoint list → created a new dropdown → Set → the callback looped forever
+> (with no save it does not freeze, because the callback stops at "CREATE / LOAD PROFILE FIRST")
+> Now `Set(value, false)` on a Dropdown/Textbox does not call the callback, like Toggle/Slider
+> Side benefit: starting the script no longer loads the profile 2–3 times over
 
 ### [x] Targets: DuelOpponents
-> แก้แล้ว: ผู้เล่นที่มี StringValue `DuelOpponents` ใน character และค่าไม่ใช่ชื่อเรา จะถูกข้าม (ไปตีคน/มอนอื่นแทน)
-> ถ้าตัวเรามี `DuelOpponents` จะตีเฉพาะผู้เล่นในค่านั้น และไม่สน Enemy Priority อื่นจนกว่า duel จบ
-> ปิด Ignore Farm Zone: คู่ duel ต้องอยู่ใน Farmzone และไม่อยู่ใน Deadzone เหมือนเป้าอื่น
-> เปิด Ignore Farm Zone: ตีคู่ duel ได้ทุกที่ (แก้จุดที่เดิมมี Waypoints + Ignore Farm Zone แล้วไม่ยอมตี กดแค่ Interact)
+
+> **Fixed:** a player whose character has a `DuelOpponents` StringValue that is not our name is skipped (it goes for another player/mob instead)
+> If we have `DuelOpponents`, it attacks only the players named in that value and ignores other Enemy Priority entries until the duel ends
+> Ignore Farm Zone off: the duel partner must be inside the Farmzone and not in the Deadzone, like any other target
+> Ignore Farm Zone on: the duel partner can be attacked anywhere (fixes the case with Waypoints + Ignore Farm Zone where it refused to attack and only pressed Interact)
 
 ### [x] Combat (PvP / PvE retreat)
-> แก้แล้ว: ตอนถอยนับผู้เล่นที่เป็นเป้าด้วย (เดิมนับแค่มอน เลยยืนนิ่งตอนสู้ผู้เล่น)
-> - อยู่ใน duel: ถอยหนีคู่ duel ตลอด ไม่ยืนนิ่ง ไม่เก็บดาบ ไม่กินยา
-> - ไม่ได้ duel: ถอยเมื่อเลือดต่ำแล้วรอฮีลเหมือนเดิม แต่ถ้าผู้เล่นอยู่ใกล้กว่า 50 studs (`RETREAT_PLAYER_SAFE_DISTANCE`) จะไม่ยืนนิ่ง
-> - ระหว่างถอย (ทั้ง PvP/PvE) หันหน้าหาศัตรูที่ใกล้สุด ถ้าเข้ามาในระยะตีจะตีไปถอยไป และจะไม่เก็บดาบกินยาจนกว่าจะพ้นระยะ
 
-### [x] Party System: รอ Leader ออกก่อนค่อย reset
-> แก้แล้ว: Leader ยังอยู่ในเซิร์ฟ = ฟาร์มตามปกติ (มีคนแปลกหน้าก็ไม่ reset)
-> Leader ออกจากเซิร์ฟ → reset → รอ ~1 วิ → `ChatEvent:FireServer("Teleport", "tp friend <Leader>")` ลอง 3 ครั้ง
+> **Fixed:** retreating now counts target players as well (it used to count only mobs, so it stood still while fighting players)
+> - In a duel: it always retreats from the duel partner, never stands still, never puts the sword away, never uses a potion
+> - Not in a duel: it retreats at low HP and waits to heal as before, but if a player is closer than 50 studs (`RETREAT_PLAYER_SAFE_DISTANCE`) it will not stand still
+> - While retreating (both PvP/PvE) it faces the nearest enemy, fights back as it retreats if the enemy comes into attack range, and does not put the sword away or use a potion until it is out of range
 
-### [x] Waypoint Loop: สู้ตามทางที่ WP ที่ Pair ไว้
-> แก้แล้ว: เดินเส้นทางถึง WP แรกที่ Pair ไว้แล้ว Loop รับช่วงต่อ
-> - รอบแรก: ไล่ WP ที่ Pair ตามลำดับ โซนไหนมีเป้าก็สู้จนหมดแล้วค่อยไป WP ที่ Pair ถัดไป
-> - หลัง WP ที่ Pair สุดท้าย: ไปโซนที่มีเป้าที่ใกล้ที่สุด ถ้าไม่มีเลยจะยืนรอในโซนปัจจุบัน ไม่วิ่งไปมา
-> - เดินผ่าน WP ที่ Pair ไว้แล้วโซนนั้นมีเป้า จะหยุดสู้ก่อน
-> - ไม่เดินเลย WP ที่ Pair แรก/สุดท้าย (เช่น Pair แรกที่ #34 จะไม่ถอยไป #33)
+### [x] Party System: wait for the Leader to leave before resetting
 
-### [x] Waypoint Loop: เดินข้ามโซนที่มีบอส / เดินกลับไปกลับมาหลังบอสตาย
-> สาเหตุ: รอบแรกไล่ WP ที่ Pair ตามลำดับโดยไม่ดูว่าโซนไหนมีบอส และวัด "ใกล้" จากเลข WP ไม่ใช่ระยะทางจริง
-> ส่วนโซนที่เช็คแล้วว่าว่างไม่ถูกจำไว้ และไม่รู้ว่าบอสจะเกิดเมื่อไหร่
-> แก้แล้ว (v2.52):
-> - อ่าน `workspace.RespawnTimers` (Configuration ที่มี `RespawnName` / `DiedAt` / `RespawnSeconds`, ถูกลบ = เกิดแล้ว)
->   ใช้กับโซนที่ตั้ง Zone Targets ไว้
-> - เลือกโซนที่ใกล้ที่สุดตามระยะทางเดินจริงตาม WP ที่มีเป้า หรือยังไม่เคยเช็คและ timer ไม่ได้บอกว่าตาย และคิดใหม่ทุก WP
-> - โซนที่เช็คแล้วว่าง จะไม่กลับไปจนกว่าเป้าของโซนนั้นจะเกิดใหม่
-> - บอสตายหมด: ไปรอที่โซนที่บอสจะเกิดเร็วสุดแล้วยืนรอ ไม่เดินไปมา
+> **Fixed:** Leader still in the server = farm normally (it does not reset even when a stranger joins)
+> Leader leaves the server → reset → wait ~1 s → `ChatEvent:FireServer("Teleport", "tp friend <Leader>")`, tried 3 times
 
-### [x] Combat: หามอนไม่เก่ง พุ่งตรงอย่างเดียว ติดซอกแล้วออกไม่ได้
-> แก้แล้ว (v2.62): การเดินเข้าหาเป้าทุกจุดใช้ `ChaseMoveTo` ตัวเดียว
-> - เดินตรงเมื่อทางโล่ง ถ้าข้างหน้ามีกำแพง หรือเดินไม่ขยับ (~0.7 วิ) จะสลับไปใช้ Pathfinding 2.5 วิ
-> - ติดแม้แต่ตอนเดินตาม path → ก้าวหลบออกจากซอกไปทางที่โล่งที่สุด (สลับซ้าย/ขวา) แล้วกระโดด
-> - ก้าวหลบซ้ำ 4 ครั้งแล้วยังไม่เข้าใกล้เป้า จะปล่อยให้ระบบเดิมตัดสินว่าเป้าไปไม่ถึง (ไม่วนอยู่ในซอกตลอด)
-> - คำนวณ path ซ้อนกันไม่ได้แล้ว (เดิมยิง ComputeAsync ทุกเฟรมระหว่างรอผล)
+### [x] Waypoint Loop: fight along the way at the paired waypoints
 
-### [x] Combat PvP: ตกน้ำแล้วว่ายไม่เป็น / หาผู้เล่นใต้น้ำแล้วตีไม่เก่ง
-> แก้แล้ว (v2.62):
-> - ผู้เล่นที่อยู่ในน้ำยังเป็นเป้าได้ (มอนในน้ำยังข้ามเหมือนเดิม) เช็คน้ำจาก Terrain voxel เลยเจอคนที่ดำอยู่ใต้ผิวน้ำ
-> - สู้กับผู้เล่นแล้วตกน้ำ หรือผู้เล่นอยู่ในน้ำ: ว่ายเข้าหาเป้าแบบ 3D (ดำลง/ขึ้นตามความสูงของเป้า) แทนการกระโดดอย่างเดียว
-> - ตอนว่ายน้ำสู้ผู้เล่นไม่ตัดจบก่อนส่วนโจมตีแล้ว (เดิม Swim Recovery `return` ทำให้ไม่เคยตีในน้ำ) ส่วนมอนบนบกยังกระโดดขึ้นฝั่งเหมือนเดิม
-> - ในน้ำวัดระยะตีแบบ 3D และ line of sight ไม่นับผิวน้ำเป็นกำแพง
-> - อยู่บนบกแต่เป้าอยู่ในน้ำ จะเดินลงน้ำตามไป
+> **Fixed:** when the route reaches the first paired WP, Waypoint Loop takes over
+> - First pass: go through the paired WPs in order, and if a zone has a target, fight it out there before moving on to the next paired WP
+> - After the last paired WP: go to the nearest zone that has a target; if there is none at all, stand and wait in the current zone instead of running back and forth
+> - When walking past a paired WP whose zone has a target, it stops to fight first
+> - It never walks past the first/last paired WP (e.g. with the first pair at #34 it will not back up to #33)
 
-### [x] SaveConfig: Safe Booster Reset เปิดแล้วไม่ save
-> แก้แล้ว (v2.62): ค่าถูก save แต่ตอนโหลดโปรไฟล์ toggle ไม่ถูก refresh (ไม่ได้อยู่ในรายการ `updateFeatureButtons`)
-> ตอนนี้ refresh ทุก toggle ที่อยู่ใน `SaveConfig.Features` อัตโนมัติ
+### [x] Waypoint Loop: walking past a zone with a boss / pacing back and forth after the boss dies
 
-### [x] SaveConfig: ค่าที่ save ต้องอยู่ใน SaveConfig ทั้งหมด / เพิ่ม module ต้องแก้หลายไฟล์
-> แก้แล้ว (v2.62): `Core/SaveConfig.lua` เป็นที่เดียวที่ประกาศค่าที่ save
-> - `Features` = toggle ทุกตัว (ค่าเริ่มต้น + key สั้นตอน export), `Settings` = ค่าตั้งทุกตัว (default / min-max / ตัวเลือก)
-> - Runtime, ProfileManager (save/load/import/export/reset), Components และ slider อ่านจากที่นี่หมด
-> - โปรไฟล์ที่ไม่มีค่าของ toggle ไหน จะใช้ค่าเริ่มต้นแทนค่าค้างจากโปรไฟล์ก่อน
-> - Init มีรายการ module รายการเดียว (`MODULES`) ใช้ทั้งดาวน์โหลดและลำดับเริ่ม
-> - เพิ่ม feature ใหม่: สร้างไฟล์ + 1 บรรทัดใน `MODULES` + 1 บรรทัดใน `SaveConfig.Features` + `AICUI.BindFeatureToggle(...)`
+> Cause: the first pass went through the paired WPs in order without looking at which zone had a boss, and it measured "nearest" by WP number rather than by real distance
+> Zones already checked as empty were not remembered, and it did not know when a boss would respawn
+> **Fixed (v2.52):**
+> - It reads `workspace.RespawnTimers` (a Configuration with `RespawnName` / `DiedAt` / `RespawnSeconds`; removed = already respawned)
+>   used for zones that have Zone Targets set
+> - It picks the nearest zone by real walking distance through the WPs that have targets, or one that has never been checked and whose timer does not say it is dead, and it re-decides at every WP
+> - A zone already checked as empty is not revisited until a target respawns there
+> - All bosses dead: go and wait in the zone whose boss respawns soonest, standing there instead of pacing around
 
-### [x] Vector3 ทศนิยม 2 ตำแหน่ง
-> แก้แล้ว (v2.62): Waypoint / Farmzone / Deadzone ที่บันทึกใหม่, ค่าที่ save/export และที่โหลดจากเซฟเดิม ปัดเป็น 2 ตำแหน่ง
-> ป้ายตำแหน่งใน UI แสดง 2 ตำแหน่ง
+### [x] Combat: Poor mob seeking — charges straight ahead and gets stuck in corners
 
-### [x] AutoRefill กับ ResetOnBoostOut เป็นอันเดียวกัน
-> แก้แล้ว (v2.62): รวมเป็น `Features/AutoRefill.lua` ไฟล์เดียว (toggle "Refill Booster" ยัง save เป็น `ResetOnBoostOut` โปรไฟล์เดิมใช้ได้)
+> **Fixed (v2.62):** Every approach-to-target move goes through a single `ChaseMoveTo`.
+> - Walks straight while the way is clear; if there is a wall ahead or the character stops moving (~0.7 s), it switches to Pathfinding for 2.5 s.
+> - Stuck even while following a path → sidesteps out of the corner toward the most open direction (alternating left/right), then jumps.
+> - After 4 sidesteps that still do not get closer to the target, the old system decides the target is unreachable (instead of circling inside the corner forever).
+> - Path computations no longer overlap (it used to fire ComputeAsync every frame while waiting for the result).
 
-### [x] Combat: มอนเดินวนรอบตัว หันหน้าตามไม่ทัน
-> แก้แล้ว (v2.63):
-> - หันเร็วขึ้นมาก (`FACE_RESPONSIVENESS` 25 → 200) และถ้าหันผิดเกิน 35° (`FACE_SNAP_ANGLE`) จะหมุนทันทีในเฟรมเดียว
-> - เล็งดักทางมอนตามความเร็ว 0.12 วิ (`FACE_LEAD_TIME`) แทนเล็งตำแหน่งที่มอนเพิ่งอยู่
-> - ตอนยืนติดดาบมอน / รอ path / ไปต่อไม่ได้ เดิมปล่อยให้ AutoRotate หมุนตัวเอง (มอนเลยเดินอ้อมไปข้างหลังได้) ตอนนี้หันหามอนตลอด
-> - ตอนเดินเข้าหาและตอนตีใช้ฟังก์ชันหันหน้าตัวเดียวกัน
+### [x] Combat PvP: Cannot swim after falling in the water / cannot fight a player underwater
 
-### [x] Farming: แยก Add Target เป็น Player / Mob
-> ทำแล้ว (v2.64): แท็บ Farming > Targeting มี 2 dropdown แทน "Add Target" อันเดิม
-> - **Add Player Target**: ผู้เล่นในเซิร์ฟ (`@ชื่อ`) อัพเดทเร็ว (`PLAYER_TARGET_REFRESH_DELAY` 0.5 วิ) ตอนมีคนเข้า/ออก
-> - **Add Mob Target**: มอนที่เห็น รวบการเกิด/ตายเป็นอัพเดทเดียวทุก 3 วิ (`MOB_TARGET_REFRESH_DELAY`)
-> - สร้าง dropdown ใหม่เฉพาะตอนรายชื่อเปลี่ยนจริง (มอนชนิดเดิมเกิดใหม่ไม่ทำให้ dropdown กระพริบ)
-> - ไม่สร้างใหม่ตอนเปิด dropdown ค้างอยู่ จะรอจนปิดก่อน และตำแหน่งใน section คงที่
-> - เพิ่มเป้า / โหลดโปรไฟล์ / กด Refresh Detected Targets ยังอัพเดททันทีเหมือนเดิม
+> **Fixed (v2.62):**
+> - A player in the water is still a valid target (mobs in the water are still skipped as before); water is read from Terrain voxels, so someone submerged below the surface is still found.
+> - Fighting a player and falling in the water, or the player being in the water: swims toward the target in 3D (dives down / rises with the target's height) instead of only jumping.
+> - Swimming no longer ends before the attack step when fighting a player (the old Swim Recovery `return` meant it never attacked in the water). Mobs on land still jump up onto the bank as before.
+> - Attack range in the water is measured in 3D, and line of sight does not treat the water surface as a wall.
+> - Standing on land with the target in the water, it walks down into the water after them.
 
-### [x] Combat PvP: target ผู้เล่นแล้วไม่หันหน้าตาม
-> สาเหตุ: การเล็งดักทาง (v2.63) ไม่มีขีดจำกัด ผู้เล่นวิ่ง ~28–38 studs/วิ จุดเล็งเลยล้ำไป 3–5 studs
-> ซึ่งพอๆ กับระยะประชิด ผู้เล่นวิ่งเข้าหา = จุดเล็งทะลุไปข้างหลังเรา (หันหลังให้), วิ่งวน = เพี้ยน 40–55°
-> แล้ว snap สลับเปิด/ปิดทุกเฟรมจนหมุนกระตุก
-> แก้แล้ว (v2.65):
-> - ไม่ดักทางเมื่อเป้าอยู่ใกล้กว่า 6 studs (`FACE_LEAD_MIN_DISTANCE`)
-> - ความเร็วที่ใช้ดักทางไม่เกิน 20 studs/วิ (`FACE_LEAD_MAX_SPEED`) กัน dash/กระเด็น
-> - ระยะดักทางไม่เกิน 35% ของระยะห่าง (`FACE_LEAD_MAX_RATIO`) มุมเพี้ยนสูงสุด ~20° ไม่ทะลุตัวเรา
-> - ตัดสินใจ snap จากทิศจริงของเป้า ไม่ใช่จุดที่ดักทาง
+### [x] SaveConfig: Safe Booster Reset was not saved when turned on
 
-### [x] Waypoint: เจอบอสกดสกิลระหว่างทางแล้วหนีอย่างเดียว ไม่เดิน waypoint ต่อ
-> สาเหตุ:
-> - หลบสกิลแล้วค้างโหมดหนี เพราะเงื่อนไขเลิกหนีมีอย่างเดียวคือเลือดต้องกลับถึง ≥70% สกิลบอสทีเดียวก็ต่ำกว่านั้น
-> - ระหว่างหนี โค้ด `return` ก่อนถึงส่วนเดิน waypoint ทุกเฟรม (หนีบอสไปเรื่อยๆ หรือยืนรอเลือดเต็ม)
-> - ตัวหาจุดหลบบังคับให้อยู่ใน Farmzone แต่เส้นทาง waypoint อยู่นอกโซน เลยหาที่หลบไม่ได้ ยืนโดนสกิล
-> แก้แล้ว (v2.66):
-> - แยกเหตุผลการหนี: หนีเพราะสกิล → สกิลจบก็เลิกหนีทันที, หนีเพราะเลือดต่ำ → รอเลือดกลับเหมือนเดิม
-> - ระหว่างเดิน waypoint หลบสกิลได้นอก Farmzone (Deadzone ยังห้าม) แล้วเดินเส้นทางต่อ
-> - ระหว่างเดิน waypoint เลือดต่ำจะไม่หนี เดินต่อและกินยาระหว่างเดิน
+> **Fixed (v2.62):** The value was saved, but loading a profile did not refresh the toggle (it was not in the `updateFeatureButtons` list).
+> Every toggle in `SaveConfig.Features` is now refreshed automatically.
 
-### [x] Combat PvP: ผู้เล่นอยู่ในน้ำแล้วไม่ว่ายไปตี
-> สาเหตุ: ControlModule ของ Roblox เรียก `Player:Move` (ปุ่มที่กด = ไม่กด = 0) และตั้ง `Humanoid.Jump` ทุก RenderStepped ก่อนฟิสิกส์
-> แต่ SwimChase สั่ง `Humanoid:Move` จาก Heartbeat เลยโดนเขียนทับเป็น 0 ทุกเฟรมก่อนตัวจะขยับ
-> (`MoveTo` ไม่โดนทับ เลยเดินไปถึงริมน้ำได้ แล้วลอยนิ่งอยู่ผิวน้ำ ดำลง/ว่ายขึ้นก็ไม่ได้)
-> แก้แล้ว (v2.67):
-> - SwimChase เก็บคำสั่งว่ายล่าสุด (ทิศ 3D + ว่ายขึ้น) แล้ว `BindToRenderStep` ต่อจาก ControlModule สั่งซ้ำทุกเฟรม
-> - คำสั่งหมดอายุเอง 0.25 วิ ถ้าเลิกสู้ในน้ำ จะไม่ค้างว่ายต่อ
+### [x] SaveConfig: Every saved value must live in SaveConfig / adding a module needed edits in several files
 
-### [x] Combat PvP: เดินเข้าหาผู้เล่นที่ยืนนิ่งแล้วกระโดดขึ้นไปบนตัว
-> สาเหตุ: ตัวหาจุดตี (`GetSafeCombatPosition`) ให้คะแนนจุดข้างหลังเป้าดีกว่าจุดอื่น (โบนัส -20)
-> ผู้เล่นยืนนิ่งหันหน้ามาหาเรา = จุดข้างหลังอยู่อีกฝั่งของตัวเขา เดินตรงไปเลยชนตัว
-> ดันต่อจนปีนขึ้น หรือ stuck แล้วโค้ดสั่งกระโดดแก้ติด เลยกระโดดขึ้นไปยืนบนตัว
-> แก้แล้ว (v2.67):
-> - ไม่เลือกจุดตีที่ต้องเดินทะลุตัวเป้า (เส้นทางผ่านใกล้ตัวเป้ากว่า 3.5 studs `TARGET_BODY_CLEARANCE`) จะอ้อมไปด้านข้างแทน
-> - ถ้าเป้าขวางทางอยู่ในระยะประชิด หยุดยืนหันหน้าตี ไม่ดันต่อ แล้วหาจุดตีใหม่ทันที
-> - ชิดตัวเป้าแล้วติด จะไม่กระโดดแก้ติด (ทั้งตอนเดินตาม path)
-> - แก้ raycast ของ `IsSafeCombatPathClear` ที่ไม่ได้ยกเว้นผู้เล่นคนอื่น/Debug folder จริง (insert ใส่สำเนาของ FilterDescendantsInstances)
+> **Fixed (v2.62):** `Core/SaveConfig.lua` is the single place that declares anything saved.
+> - `Features` = every toggle (default + short export key), `Settings` = every setting (default / min-max / options)
+> - Runtime, ProfileManager (save/load/import/export/reset), Components and the sliders all read from here.
+> - A profile with no value for a toggle falls back to the default instead of keeping the value left over from the previous profile.
+> - Init has a single module list (`MODULES`) used for both the download and the start order.
+> - Adding a feature: create the file + 1 line in `MODULES` + 1 line in `SaveConfig.Features` + `AICUI.BindFeatureToggle(...)`
 
-### [x] Combat: ว่ายน้ำตีให้ก้ม/เงยหาเป้า
-> ทำแล้ว (v2.68): ตอนอยู่ใน Swimming state `FaceGoblin` เอียง AlignOrientation ขึ้น/ลงตามความสูงของเป้า
-> เหมือนว่ายพุ่งเข้าไปตี จำกัดมุมไม่เกิน 70° (`SWIM_FACE_MAX_PITCH`) กันตัวหมุนตอนเป้าอยู่ตรงใต้/เหนือพอดี
-> ขึ้นบกแล้วกลับมายืนตรงตามเดิม
+### [x] Vector3 rounded to 2 decimal places
 
-### [x] Combat: ตีบนบกแล้ววิ่งหนี หันหน้าไปมา
-> สาเหตุ: ตอนหนีสลับหันหาศัตรู/หันทางวิ่งทุกครั้งที่ศัตรูข้ามระยะ 22 studs (`COMBAT_FACE_RANGE`)
-> แล้วจังหวะสวนตี (`FightBackThreat`) สั่งหันอีกรอบในเฟรมเดียวกัน ทั้งหมดผ่าน `FaceGoblin` ที่ snap ทันทีเมื่อเกิน 35°
-> แก้แล้ว (v2.68): ตอนหนีใช้ `FaceWhileRetreating` ตัวเดียวทุกจุด
-> - ไม่ snap หันนุ่มลง (`RETREAT_FACE_RESPONSIVENESS` 30) และหมุนได้ไม่เกิน 6 rad/วิ (`RETREAT_FACE_MAX_TURN_SPEED`)
-> - เปลี่ยนทิศไม่ถึง 15° ไม่หัน (`RETREAT_FACE_DEADBAND`)
-> - เลิกหันหาศัตรูต่อเมื่อห่างเกินระยะ +6 studs (`RETREAT_FACE_HYSTERESIS`) และสลับแล้วค้างไว้อย่างน้อย 0.8 วิ (`RETREAT_FACE_HOLD`)
-> - จังหวะสวนตีหันหาเป้าทันที แล้วการหนีเฟรมถัดไปหันตาม ไม่หันกลับไปมา
+> **Fixed (v2.62):** Newly saved Waypoints / Farmzones / Deadzones, values that are saved and exported, and values loaded from an old save are all rounded to 2 decimal places.
+> Position labels in the UI show 2 decimal places.
 
-### [x] Combat: ฟาร์มมอนแล้วหามอนไม่เก่งเท่าเวอร์ชันเก่า และกระโดดบ่อยกว่าปกติ
-> สาเหตุ (มาจาก v2.62): ตอนอยู่ในระยะตี (8–14.5 studs) แล้วกำลังฟันหรือโดนมอนรุมบัง ตัวละครเดินช้าลง ระบบเลยคิดว่าติด
-> แล้วสลับไปใช้ Pathfinding + ก้าวหลบ ซึ่งตอนก้าวหลบจะกระโดดทุกเฟรม ส่วน Pathfinding ที่หาทางไม่เจอบนพื้นขรุขระ
-> จะก้าวหลบไปมาจนครบ 4 ครั้งแล้วยอมแพ้ (ปิด Safe Combat = ยืนนิ่ง, เปิด = ตัดสินว่าเป้าไปไม่ถึงแล้วข้ามไป 15 วิ)
-> แก้แล้ว (v2.73):
-> - อยู่ในระยะตีของเป้าแล้วไม่นับว่าติด ไม่สลับไป Pathfinding / ก้าวหลบ / กระโดดกลางการสู้
-> - ก้าวหลบจะกระโดดเฉพาะเมื่อข้างหน้ามีสิ่งกีดขวางจริง
-> - Pathfinding หาทางไม่เจอ → เดินตรงเข้าหาเป้าเหมือนเวอร์ชันเก่า ถ้าติดกำแพงจริงค่อยก้าวหลบ
->   จะยอมแพ้ก็ต่อเมื่อก้าวหลบครบ 4 ครั้งแล้วยังไม่เข้าใกล้เป้า
+### [x] AutoRefill and ResetOnBoostOut are the same thing
 
-### [x] Server: แจ้งเตือน (notice) รัวเกินไป
-> แก้แล้ว (v2.77): แจ้งเตือนทุกอันของ Server ผ่านตัวกรองเดียว ข้อความเดิมซ้ำภายใน 8 วิจะไม่ขึ้นซ้ำ (`NOTICE_COOLDOWN`)
-> - Join Alerts: คนที่เข้ามาใกล้ๆ กัน (ภายใน 1.5 วิ) รวมเป็นแจ้งเตือนเดียว เช่น "3 players joined: @a, @b, @c" โชว์ชื่อสูงสุด 4 คนที่เหลือบอกเป็นจำนวน
->   ตอนเปิด Join Alerts / โหลดโปรไฟล์ คนที่อยู่ในเซิร์ฟอยู่แล้วรวมเป็นแจ้งเตือนเดียว (เดิมขึ้นทีละคน)
->   คนที่ออกแล้วกลับเข้ามาภายใน 120 วิไม่แจ้งซ้ำ ถ้าออกไปหรือถูกใส่ whitelist ระหว่างรอรวม จะไม่แจ้ง
-> - Teleport ล้มเหลว: แจ้งเฉพาะ teleport ของ Server เอง (เดิมแจ้งซ้ำตอน Auto Block / Party teleport ล้มเหลวด้วย)
-> - Server Hop: กดซ้ำระหว่างกำลังหาเซิร์ฟจะไม่เริ่มหาใหม่ซ้อน (เดิมหาซ้อนกันและแจ้งเตือนซ้อน)
-> - เช็คกลุ่มไม่ผ่าน: แจ้งได้ครั้งเดียวต่อ 60 วิ ไม่ว่าจะพลาดกี่คน (รายละเอียดอยู่ใน console)
+> **Fixed (v2.62):** Merged into the single file `Features/AutoRefill.lua` (the "Refill Booster" toggle still saves as `ResetOnBoostOut`, so existing profiles keep working).
 
-### [x] Combat: มอนที่มองไม่เห็นแต่เดินไปได้ ยืนหันหน้าใส่ไม่วิ่งไป / ปิด Safe Combat แล้วยืนนิ่งหน้ามอน
-> สาเหตุ:
-> - (v2.62) ระหว่างรอ Pathfinding คำนวณ เฟรมอื่นๆ ตกไปขั้นสุดท้ายที่สั่ง `Move(0)` ซึ่งยกเลิก MoveTo เลยยืนหันหน้าเฉยๆ
->   และ path ไปจุดยืนกับ path ไปตัวมอนถูกคำนวณสลับกันในเฟรมเดียว แต่ละอันลบ path ของอีกอันทิ้ง เลยไม่ได้เดินตามสักอัน
-> - (v2.67) ถ้าตัวมอนขวางทางไปจุดหลังมอน จะยืนรอให้ Safe Combat หาจุดใหม่ แต่ตอนปิด Safe Combat ไม่มีใครหาให้ เลยยืนหน้ามอนตลอด
->   และตอนเปิด Safe Combat จุดหลังมอนถูกตัดทิ้งหมดถ้าเรายืนอยู่ด้านหน้า
-> แก้แล้ว (v2.78):
-> - ระหว่างรอ path ไม่หยุดเดิน (เดินตาม MoveTo เดิมต่อ) และหันหน้าใส่เป้า, path ที่ค้างเกิน 3 วิ (`PATH_COMPUTE_TIMEOUT`) ยกเลิกแล้วคำนวณใหม่
-> - คำนวณ path ไปที่เดียวต่อครั้ง: ถ้า path ไปจุดยืนไม่ผ่าน จะไปหาตัวมอนตรงๆ 2 วิ (`PATH_TO_MOB_HOLD`) ก่อนลองจุดยืนใหม่
-> - ตัวมอนขวางทางไปจุดหลังมอน → เดินอ้อมด้านข้างตัวมอน (ห่าง 3.5 + 2 studs, `BODY_DETOUR_MARGIN`) แทนการยืนรอ
-> - เปิด Safe Combat: กลับมาเลือกจุดหลังมอนได้แม้ยืนด้านหน้า (ตัดทิ้งเฉพาะเป้าที่เป็นผู้เล่น)
+### [x] Combat: Mobs circle around the character and facing cannot keep up
 
-### [x] Combat: ปิด Safe Combat แล้วไม่อ้อมหลบ ยืนรับ damage หน้ามอน
-> สาเหตุ: ตอนปิด Safe Combat การต่อสู้เดินตรงเข้าหามอนอย่างเดียว ไม่ใช้ตัวหาจุดยืน (หลังมอน, วนตามเวลามอนหัน) แบบ Safe Combat
-> ส่วน Safe Enemy Range พอเดินถึงจุดแล้วก็หลุดไปเดินเข้าหน้ามอนอีก เลยเดินเข้าออกแล้วยืนรับดาบ (และไม่ทำงานเลยกับมอนที่ไม่มี BladePart)
-> แก้แล้ว (v2.81): ปิด Safe Combat ทำงานเหมือนเปิดทุกอย่าง (เลือกหลังมอนก่อน, ข้าง, วนตามเวลามอนหันมาหาเรา, path อ้อมสิ่งกีดขวาง)
-> - ต่างกันแค่ระยะ: ยืนชิดตัวมอน 5 / 6.5 / 8 studs (`CLOSE_COMBAT_DISTANCES`) แทนการยืนนอกระยะดาบ และไม่ถอยหนีดาบ
-> - Safe Enemy Range (ถ้าตั้งไว้และมอนมี BladePart) ยังเป็นตัวกำหนดระยะ เดินถึงจุดแล้วยืนตรงนั้นและหันหน้าใส่มอน ไม่เดินกลับเข้าหน้ามอน
+> **Fixed (v2.63):**
+> - Turns much faster (`FACE_RESPONSIVENESS` 25 → 200), and if the facing error is over 35° (`FACE_SNAP_ANGLE`) it snaps around in a single frame.
+> - Leads the mob by its velocity over 0.12 s (`FACE_LEAD_TIME`) instead of aiming at the position the mob was just in.
+> - When pinned against the mob's blade / waiting for a path / unable to continue, the old code let AutoRotate turn the character itself (so the mob could walk around behind us); it now faces the mob the whole time.
+> - Walking in and attacking use the same facing function.
 
-### [x] Server: Leave On Danger Group ค่าเริ่มต้นให้เป็นปิด
-> แก้แล้ว (v2.82): ค่าเริ่มต้นเปลี่ยนจากเปิดเป็นปิด (โปรไฟล์ที่บันทึกไว้แล้วยังใช้ค่าเดิมของโปรไฟล์นั้น)
+### [x] Farming: Add Target split into Player / Mob
 
-### [x] Combat: ปิด Safe Combat แล้วไม่ต้องถอยเหมือน Safe Combat
-> แก้แล้ว (v2.83): ปิด Safe Combat ไม่ถอยออกจากมอนเลย
-> - ไม่ถอยหลบมอนตัวที่สองที่เข้ามาใกล้ (threat escape) และไม่ใช้ Safe Enemy Range (การเว้นระยะจากดาบ) ทั้งสองอย่างเหลือเฉพาะตอนเปิด Safe Combat
-> - อยู่ในระยะ 8 studs และไม่ได้อยู่หน้ามอน (นอก 60° จากทิศที่มอนหัน, `CLOSE_FRONT_DOT`) → ยืนตีอยู่ตรงนั้น ไม่เดินออกไปจุดอื่น
-> - ขยับเฉพาะตอนมอนหันมาหาเรา → อ้อมไปหลังมอน (ระยะ 5 / 6.5 / 8 studs)
-> - ถอยตอนเลือดต่ำ / หลบสกิลมอน ยังทำงานเหมือนเดิม (คนละระบบ)
+> **Done (v2.64):** The Farming > Targeting tab has 2 dropdowns instead of the old "Add Target".
+> - **Add Player Target**: players in the server (`@name`), refreshed quickly (`PLAYER_TARGET_REFRESH_DELAY` 0.5 s) when someone joins or leaves.
+> - **Add Mob Target**: mobs in sight, with spawns/deaths batched into a single update every 3 s (`MOB_TARGET_REFRESH_DELAY`).
+> - The dropdown is rebuilt only when the list really changes (the same mob type respawning does not make it flicker).
+> - It is not rebuilt while a dropdown is open — it waits for it to close — and its position in the section stays fixed.
+> - Adding a target / loading a profile / pressing Refresh Detected Targets still updates immediately as before.
 
-### [x] Combat: เปิด Auto Patrol แล้วไม่เดิน / เห็นมอนแต่ไม่เดินไปหา (ปิด Safe Combat, ปิด Gather Mobs, ไม่มีคนอื่นในเซิร์ฟ)
-> ยังหาสาเหตุไม่เจอจากโค้ด: เช็ค syntax / ตัวแปรที่ไม่ได้ประกาศทุกไฟล์ด้วย luau-compile / luau-analyze แล้วไม่มี error
-> v2.84: เพิ่มบรรทัด **FARM STATE** ในแท็บ Status บอกว่าลูปฟาร์มทำอะไรอยู่เฟรมนั้น
-> เช่น `RETREAT (Skill)`, `AUTO BLOCK @ชื่อ`, `ROUTE #3`, `PATROL`, `IDLE (NO TARGET)`,
+### [x] Combat PvP: Does not turn to face a targeted player
+
+> **Cause:** The lead aiming added in v2.63 had no limits. A player runs ~28-38 studs/s, so the aim point overshot by 3-5 studs,
+> which is about melee range: a player running at us made the aim point pass behind us (turning our back), and a player circling skewed it 40-55°.
+> Snap then flipped on and off every frame, so the turn stuttered.
+> **Fixed (v2.65):**
+> - No lead aiming when the target is closer than 6 studs (`FACE_LEAD_MIN_DISTANCE`).
+> - The velocity used for the lead is capped at 20 studs/s (`FACE_LEAD_MAX_SPEED`) to survive dashes and knockback.
+> - The lead distance is at most 35% of the target distance (`FACE_LEAD_MAX_RATIO`), so the error is at most ~20° and never passes through our body.
+> - Snap is decided from the target's real direction, not from the lead point.
+
+### [x] Waypoint: A boss casting on the route caused permanent retreat instead of continuing
+
+> **Cause:**
+> - After dodging a skill it stayed in retreat mode, because the only way out of retreat was HP back to ≥70%, and a single boss skill drops below that.
+> - While retreating, the code hit `return` before the waypoint-walking step every frame (so it either kept fleeing the boss or stood waiting for full HP).
+> - The dodge-spot finder was forced to stay inside the Farmzone, but the waypoint route runs outside the zone, so it found nowhere to dodge and stood in the skill.
+> **Fixed (v2.66):**
+> - The reasons to retreat are separated: retreat because of a skill → it stops retreating the moment the skill ends; retreat because of low HP → waits for HP to come back as before.
+> - While walking the waypoint route it can dodge skills outside the Farmzone (Deadzone is still forbidden), then continues the route.
+> - While walking the waypoint route it does not retreat on low HP: it keeps going and drinks a potion on the move.
+
+### [x] Combat PvP: Does not swim over to attack a player who is in the water
+
+> **Cause:** Roblox's ControlModule calls `Player:Move` (the pressed button = not pressed = 0) and sets `Humanoid.Jump` every RenderStepped before physics,
+> but SwimChase issued `Humanoid:Move` from Heartbeat, so it was overwritten with 0 every frame before the character could move.
+> (`MoveTo` was not overwritten, so it could walk to the water's edge and then floated motionless at the surface, unable to dive down or swim up.)
+> **Fixed (v2.67):**
+> - SwimChase keeps the last swim command (3D direction + swim up) and repeats it every frame through `BindToRenderStep` running after ControlModule.
+> - The command expires by itself after 0.25 s, so leaving a water fight does not leave it swimming.
+
+### [x] Combat PvP: Walking up to a player who stands still, then jumping on top of them
+
+> **Cause:** The combat-spot picker (`GetSafeCombatPosition`) scored spots behind the target better than any other spot (bonus -20).
+> A player standing still and facing us means the spot behind them is on the far side of their body, so walking straight in bumped into them,
+> and pushing further either climbed them or got stuck, which the code answered by jumping — so it jumped up and stood on top of them.
+> **Fixed (v2.67):**
+> - It no longer picks a spot it would have to walk through the target to reach (a path passing within 3.5 studs of the target, `TARGET_BODY_CLEARANCE`); it goes around to the side instead.
+> - If the target blocks the way at point-blank range, it stops, stands and attacks facing them instead of pushing, and immediately picks a new spot.
+> - When hugging the target and stuck, it does not jump to unstick (including while following a path).
+> - Fixed the `IsSafeCombatPathClear` raycast, which did not really exclude other players / the Debug folder (it now inserts a copy of FilterDescendantsInstances).
+
+### [x] Combat: Swimming attacks tilt the body up/down to aim at the target
+
+> **Done (v2.68):** In the Swimming state `FaceGoblin` pitches the AlignOrientation up/down with the target's height,
+> like swimming straight in to attack, with the angle capped at 70° (`SWIM_FACE_MAX_PITCH`) so the body does not spin when the target is exactly below or above.
+> Back on land it stands upright again.
+
+### [x] Combat: Retreating on land made the character swing its facing back and forth
+
+> **Cause:** While retreating it alternated between facing the enemy and facing the run direction every time the enemy crossed 22 studs (`COMBAT_FACE_RANGE`),
+> and the counterattack moment (`FightBackThreat`) ordered another turn in the same frame — all through `FaceGoblin`, which snaps instantly past 35°.
+> **Fixed (v2.68):** Retreating uses a single `FaceWhileRetreating` at every call site.
+> - No snap; turning is smoother (`RETREAT_FACE_RESPONSIVENESS` 30) and capped at 6 rad/s (`RETREAT_FACE_MAX_TURN_SPEED`).
+> - A direction change under 15° does not turn at all (`RETREAT_FACE_DEADBAND`).
+> - It stops facing the enemy once the distance is over the range +6 studs (`RETREAT_FACE_HYSTERESIS`), and after switching it holds that choice for at least 0.8 s (`RETREAT_FACE_HOLD`).
+> - The counterattack faces the target immediately, and the next retreating frame follows that facing instead of turning back and forth.
+
+### [x] Combat: Mob farming seeks mobs worse than the older version and jumps more than usual
+
+> **Cause (from v2.62):** Inside attack range (8-14.5 studs), while swinging or blocked by mobs crowding in, the character walks slower, so the system thought it was stuck
+> and switched to Pathfinding + sidesteps. Sidestepping jumped every frame, and Pathfinding that could not find a route over rough ground
+> kept sidestepping until all 4 attempts were used and it gave up (Safe Combat off = stand still, on = decide the target is unreachable and skip it for 15 s).
+> **Fixed (v2.73):**
+> - Being inside attack range of the target no longer counts as stuck: no switching to Pathfinding / sidesteps / jumping in the middle of a fight.
+> - A sidestep jumps only when there really is an obstacle in front.
+> - Pathfinding finds no route → walk straight at the target like the older version, and only sidestep if actually blocked by a wall.
+>   It gives up only after 4 sidesteps that still do not get closer to the target.
+
+### [x] Server: Notifications fired too often
+
+> **Fixed (v2.77):** Every Server notification goes through a single filter: the same message is not shown again within 8 s (`NOTICE_COOLDOWN`).
+> - Join Alerts: players who join close together (within 1.5 s) are merged into one notification, e.g. "3 players joined: @a, @b, @c"; it shows at most 4 names and reports the rest as a count.
+>   Turning Join Alerts on / loading a profile merges players already in the server into one notification (previously one per player).
+>   Someone who left and came back within 120 s does not notify again; if they leave, or are added to the whitelist, while the merge is pending, nothing is shown.
+> - Teleport failed: only Server's own teleport notifies (previously Auto Block / Party teleport failures notified again too).
+> - Server Hop: pressing again while it is already searching does not start an overlapping search (previously searches overlapped and notifications came twice).
+> - Group check failed: at most one notification per 60 s, no matter how many players failed it (details in the console).
+
+### [x] Combat: A mob that is unseen but reachable made it stand facing instead of running over / Safe Combat off made it stand still facing the mob
+
+> **Cause:**
+> - (v2.62) While waiting for a Pathfinding computation, the other frames fell through to the last step that issues `Move(0)`, which cancels MoveTo, so it just stood facing the mob.
+>   The path to the standing spot and the path to the mob itself were also computed alternately in the same frame, and each cancelled the other's path, so it never followed either.
+> - (v2.67) If the mob itself blocked the way to the spot behind it, it waited for Safe Combat to pick a new spot, but with Safe Combat off nobody picked one, so it stood facing the mob forever.
+>   And with Safe Combat on, spots behind the mob were all discarded whenever we were standing in front of it.
+> **Fixed (v2.78):**
+> - While waiting for a path it does not stop walking (it keeps following the previous MoveTo) and faces the target; a path pending longer than 3 s (`PATH_COMPUTE_TIMEOUT`) is cancelled and recomputed.
+> - One path is computed at a time: if the path to the standing spot fails, it paths straight at the mob for 2 s (`PATH_TO_MOB_HOLD`) before retrying the standing spot.
+> - Mob blocking the way to a spot behind it → walk around the mob's side (3.5 + 2 studs away, `BODY_DETOUR_MARGIN`) instead of standing and waiting.
+> - Safe Combat on: spots behind the mob are selectable again even when standing in front (only player targets are discarded).
+
+### [x] Combat: With Safe Combat off it did not dodge around and stood in front of the mob taking damage
+
+> **Cause:** With Safe Combat off, combat only walked straight at the mob and never used the standing-spot picker (behind the mob, circling with the mob's turn timing) that Safe Combat uses.
+> And Safe Enemy Range, once it reached the spot, dropped back to walking at the mob's face, so it walked in and out and stood taking the blade (and did not work at all against mobs with no BladePart).
+> **Fixed (v2.81):** With Safe Combat off it behaves exactly like Safe Combat on (prefers a spot behind the mob, then the side, circles with the mob's turn timing, paths around obstacles).
+> - The only differences are the distances: it stands close to the mob at 5 / 6.5 / 8 studs (`CLOSE_COMBAT_DISTANCES`) instead of outside blade range, and it does not back away from the blade.
+> - Safe Enemy Range (when set and the mob has a BladePart) still sets the distance: it walks to the spot, stands there facing the mob, and does not walk back toward its face.
+
+### [x] Server: Leave On Danger Group should default to off
+
+> **Fixed (v2.82):** The default changed from on to off (profiles that already saved it keep that profile's own value).
+
+### [x] Combat: With Safe Combat off it should not retreat the way Safe Combat does
+
+> **Fixed (v2.83):** With Safe Combat off it does not back away from the mob at all.
+> - It neither backs away from a second mob that comes close (threat escape) nor uses Safe Enemy Range (keeping out of blade reach); both remain only for Safe Combat on.
+> - Within 8 studs and not in front of the mob (outside 60° from the mob's facing, `CLOSE_FRONT_DOT`) → attack from where it stands instead of walking out to another spot.
+> - It only moves when the mob turns toward us → circles to behind the mob (at 5 / 6.5 / 8 studs).
+> - Retreating on low HP / dodging mob skills still behaves as before (a separate system).
+
+### [x] Combat: With Auto Patrol on it does not walk / sees a mob but does not go to it (Safe Combat off, Gather Mobs off, nobody else in the server)
+
+> Still no cause found from the code: every file was checked for syntax / undeclared variables with luau-compile / luau-analyze and there are no errors.
+> v2.84: added a **FARM STATE** line in the Status tab saying what the farm loop is doing that frame,
+> e.g. `RETREAT (Skill)`, `AUTO BLOCK @name`, `ROUTE #3`, `PATROL`, `IDLE (NO TARGET)`,
 > `CHASE Goblin 12 // CLOSE HOLD`, `CHASE ... // CHASE TO SPOT / STRAIGHT`, `CHASE ... // WAITING (NO WAY FOUND)`
-> → ตอนบอทไม่เดิน ให้ดูว่าบรรทัดนี้ขึ้นว่าอะไร แล้วค่อยแก้ตรงจุด
-> FARM STATE ขึ้น `PATH SOLVING` สลับ `WAITING (NO WAY FOUND)`:
-> สาเหตุ (v2.81): ปิด Safe Combat แล้วจุดยืนอยู่ห่างตัวมอนแค่ 5 studs เช็คทางตรงด้วย ray ชนมอนตัวอื่นในกลุ่มเลยคิดว่าทางถูกบัง
-> แล้วส่งไป Pathfinding ซึ่งหาทางไปจุดที่ชิดตัวมอนขนาดนั้นไม่ได้ (อยู่ในตัวมอน) เลยรอ path แล้วยืนนิ่ง ไม่ได้ไล่มอน และ Patrol ก็ไม่ทำงานเพราะยังล็อกเป้าอยู่
-> แก้แล้ว (v2.85): ปิด Safe Combat ใช้ `ChaseMoveTo` เดินไปจุดยืนเลย (มันเดินตรง / สลับ path / ก้าวหลบเอง) ห้ามแค่ทางผ่านน้ำหรือ deadzone
-> ไปจุดยืนไม่ได้ → เดินเข้าหาตัวมอนตรงๆ เหมือนก่อน v2.81 ค่อยใช้ Pathfinding เป็นทางสุดท้าย
+> → when the bot is not moving, look at what this line says and then fix that specific step.
+> FARM STATE showed `PATH SOLVING` alternating with `WAITING (NO WAY FOUND)`:
+> **Cause (v2.81):** With Safe Combat off the standing spot hangs only 5 studs from the mob; the straight-line check with a ray hit another mob in the group and concluded the way was blocked.
+> It was then sent to Pathfinding, which cannot find a route to a spot that close to the mob (it is inside the mob), so it waited for a path and stood still, never chasing the mob, and Patrol did not work either because the target was still locked.
+> **Fixed (v2.85):** With Safe Combat off it uses `ChaseMoveTo` to walk straight to the standing spot (it walks straight / switches to a path / sidesteps on its own); only a route through water or a deadzone is forbidden.
+> Cannot reach the standing spot → walk straight at the mob itself, like before v2.81, and only use Pathfinding as a last resort.
 
-### [x] Mining: เนินเล็กๆ ไม่โดดข้าม
-> แก้แล้ว (v2.88): ใน `WalkController` สิ่งกีดขวางที่เตี้ยพอโดดข้ามได้ (ไม่มีอะไรบังที่ความสูง 3 studs จากเท้า, `MAX_HOP_RISE`) ไม่ส่งไปหา path อ้อมแล้ว
-> เดินตรงเข้าไปแล้วโดดตอนห่าง 2 studs (`HOP_EDGE`) · ต้องมีที่ว่างหลังเนิน 2 studs (`HOP_LANDING`)
-> สาเหตุ: เดิมสิ่งกีดขวางที่สูงเกิน 1 stud ส่งไป Pathfinding ทุกอันแม้โดดข้ามได้ และตัวเช็คโดดเดิมวัดจากก้น HumanoidRootPart ซึ่งสูงกว่าเนินเตี้ยๆ เลยไม่เคยเห็นเนิน
-> ใช้กับ Auto Smithing ด้วย (เดินด้วยตัวเดียวกัน) ส่วน combat ไม่ได้แก้
+### [x] Mining: Small hills are not jumped over
 
-### [x] Mining: ระหว่างขุดตัวละครขยับ แล้วโดนเตะเพราะไกลเกิน
-> แก้แล้ว (v2.88): ระหว่าง claim / ขุด ตั้ง WalkSpeed = 0 ทุกเฟรม ขุดเสร็จคืนค่าเดิม (ปิด Auto Farm ระหว่างขุดก็คืนค่าภายใน 0.5 วิ, `STEP_STALE_SECONDS`)
-> - Auto Farm ไม่ดัน WalkSpeed ขึ้นระหว่างที่ล็อกอยู่
-> - สู้เฉพาะมอนที่เข้ามาใกล้ไม่เกิน 10 studs (`DEFEND_RANGE` เดิม 15) ระหว่างขุดยืนตีอยู่กับที่
+> **Fixed (v2.88):** In `WalkController`, an obstacle low enough to jump over (nothing blocking at 3 studs above the feet, `MAX_HOP_RISE`) is no longer sent to path around.
+> It walks straight in and jumps at 2 studs away (`HOP_EDGE`) · there must be 2 studs of clear space after the hill (`HOP_LANDING`)
+> **Cause:** Previously every obstacle taller than 1 stud was sent to Pathfinding even when it could be jumped, and the old jump check measured from the base of the HumanoidRootPart, which is higher than a low hill, so it never saw the hill.
+> This also applies to Auto Smithing (same walker); combat was not changed.
 
-### [x] Combat: ปิด Safe Combat ระยะห่างจากเป้ายังไกลไป
-> แก้แล้ว (v2.88): เปลี่ยนแค่ค่า `CLOSE_COMBAT_DISTANCES` จาก 5 / 6.5 / 8 เป็น 4 / 5 / 6 studs (ยังห่างจากตัวมอนเกิน `TARGET_BODY_CLEARANCE` 3.5) logic combat เหมือนเดิม
-> - ยืนตีอยู่กับที่ (CLOSE HOLD) เมื่ออยู่ในระยะ 6 studs (เดิม 8)
+### [x] Mining: The character moves while mining and gets kicked for being too far away
 
-### [x] Server: Leave On Danger Group เข้าๆ ออกๆ เซิร์ฟเดิม
-> แก้แล้ว (v2.90): สาเหตุคือออกด้วย `Teleport(PlaceId)` ให้ Roblox เลือกเซิร์ฟเอง โดยไม่ได้ block คนนั้นก่อน เลยโดนส่งกลับเซิร์ฟเดิมซ้ำ
-> - ตอนนี้ block คนในกลุ่มอันตรายก่อน (ใช้ prompt ของ Auto Block ถ้าเปิด **Auto Confirm Block** จะกดให้เอง) รอจน block ติดสูงสุด 10 วิ (`DANGER_BLOCK_WAIT`) แล้วค่อยออก
-> - ออกไปเซิร์ฟอื่นที่หยิบจากรายการ public server (ไม่ใช่เซิร์ฟนี้แน่นอน) เหมือนปุ่ม Server Hop ถ้าอ่านรายการไม่ได้ค่อยให้ Roblox เลือกเหมือนเดิม
-> - block ไม่ติดใน 10 วิ (ปิด Auto Confirm Block แล้วไม่ได้กดเอง) → แจ้งเตือนแล้วออกเลย · คนนั้นออกจากเซิร์ฟไปก่อน → ยกเลิกไม่ต้องออก
+> **Fixed (v2.88):** while claiming / mining, `WalkSpeed` is set to 0 every frame and restored once mining finishes (turning Auto Farm off mid-mine also restores it within 0.5 s, `STEP_STALE_SECONDS`)
+> - Auto Farm no longer pushes `WalkSpeed` back up while it is locked
+> - Only mobs that come within 10 studs are fought (`DEFEND_RANGE`, previously 15); while mining the character stands still and fights in place
 
-### [x] Auto Start Game: สคริปต์โหลดเร็วกว่าหน้า title แล้วเลิกกดก่อน
-- สคริปต์โหลดเสร็จก่อนหน้า title นาน ลองกดครบ 3 รอบไม่ผ่าน (จริงๆ หน้ายังโหลดไม่เสร็จ) แล้วหยุดไปเลย
-- ให้เช็คไปเรื่อยๆ จนกว่าจะกดผ่าน หรือ PlaceId เปลี่ยน
+### [x] Combat: With Safe Combat off, the distance to the target is still too far
 
-> แก้แล้ว (v2.95): ไม่ยอมแพ้แล้ว กดจนกว่าจะผ่าน Start Game, PlaceId เปลี่ยน หรือปิด toggle
-> - กดไม่ผ่าน = ลองใหม่ เว้นช่วงนานขึ้นทีละ 2 วิ สูงสุด 10 วิ (`MAX_RETRY_DELAY`) ไม่มีแจ้งเตือน "Click it manually" แล้ว
-> - ไม่เจอหน้า title = สแกนต่อไม่หยุด เกิน 60 วิ (`IDLE_SLOW_AFTER`) สแกนห่างขึ้นเป็นทุก 2 วิ (`IDLE_SCAN_INTERVAL`)
-> - เปิดสวิตช์ทั้งที่อยู่ในเกมแล้ว ลูปจะสแกนอยู่เบื้องหลังจนกว่าจะปิด toggle หรือรันสคริปต์ใหม่
+> **Fixed (v2.88):** only the `CLOSE_COMBAT_DISTANCES` value changed, from 5 / 6.5 / 8 to 4 / 5 / 6 studs (still further from the mob's body than `TARGET_BODY_CLEARANCE` 3.5); the combat logic is unchanged
+> - The character stands still and attacks in place (CLOSE HOLD) at 6 studs (previously 8)
+
+### [x] Server: Leave On Danger Group hops in and out of the same server
+
+> **Fixed (v2.90):** the cause was leaving with `Teleport(PlaceId)`, which lets Roblox pick the server itself without blocking that player first, so it kept being sent back to the same server
+> - It now blocks the danger-group player first (using Auto Block's prompt; with **Auto Confirm Block** on it clicks for you), waits up to 10 s for the block to land (`DANGER_BLOCK_WAIT`) and only then leaves
+> - It leaves for another server picked from the public server list (never this one), like the Server Hop button; if the list cannot be read it falls back to letting Roblox choose as before
+> - If the block does not land within 10 s (Auto Confirm Block off and the user did not click) it warns and leaves anyway · if that player left the server first, the hop is cancelled
+
+### [x] Auto Start Game: The script loads before the title screen and gives up clicking too early
+
+- The script finishes loading long before the title screen, runs all 3 click attempts without getting through (the page has not actually finished loading) and then stops for good
+- Make it keep checking until a click gets through or the PlaceId changes
+
+> **Fixed (v2.95):** it no longer gives up: it keeps clicking until Start Game is passed, the PlaceId changes or the toggle is turned off
+> - A failed click means another attempt, with the gap growing by 2 s each time up to 10 s (`MAX_RETRY_DELAY`); the "Click it manually" notice is gone
+> - No title screen found means it keeps scanning; after 60 s (`IDLE_SLOW_AFTER`) the scan slows to every 2 s (`IDLE_SCAN_INTERVAL`)
+> - Turning the toggle on while already in-game leaves the loop scanning in the background until the toggle is turned off or the script is run again
 >
-> แก้แล้ว (v2.96): ทำงานเฉพาะ place หน้าเมนู (PlaceId `4733278992`, `MENU_PLACE_ID`)
-> - รันใน place อื่น (ในเกม) = ไม่สแกนเลย จึงไม่กดหน้าจอใดๆ ในเกม · ออกจาก place หน้าเมนู = หยุดทันที
+> **Fixed (v2.96):** it only acts in the menu place (PlaceId `4733278992`, `MENU_PLACE_ID`)
+> - Running in another place (in-game) scans nothing at all, so it never clicks anything in-game · leaving the menu place stops it immediately
 
-### [x] UI: คลิกบนหน้าต่าง popup แล้วทะลุไปกดโดน UI หลัก
-> แก้แล้ว (v2.98): สาเหตุคือหน้าต่างลอยเป็น Frame ธรรมดา ซึ่ง Roblox ไม่หยุดคลิกไว้ (คลิกจะหยุดที่ปุ่มบนสุดเท่านั้น) คลิกที่พื้นหน้าต่าง / ตัวหนังสือ / ช่องเลื่อน เลยไปโดนปุ่มของหน้าหลักที่อยู่ข้างใต้
-> - เปลี่ยนพื้นของ Server Browser, Recipe Browser, popup วัตถุดิบ, รายการ dropdown, Pinned Items, หน้า Configuration และตัวเลือกสี เป็นปุ่มว่าง (หน้าตาเหมือนเดิม) คลิกตรงไหนในหน้าต่างก็หยุดอยู่ที่หน้าต่างนั้น ปุ่มข้างในยังกดได้ปกติ
+### [x] UI: Clicks on a popup pass through to the main UI
 
-### [x] Mob Dictionary: v3.01 โหลด script ไม่ขึ้น (LOAD FAILED)
-> แก้แล้ว (v3.02): `Features/MobDictionary.lua` มี `return Dictionary` ซ้ำสองบรรทัด compile ไม่ผ่าน ทั้ง script เลยหยุดที่หน้าโหลด
-> - ลบบรรทัดซ้ำ · เช็ค compile ทุกไฟล์ด้วย `luau-compile` แล้วผ่านหมด
-> - StatusEffect ว่าง / `None` ไม่ขึ้นป้าย ☠ เปล่าๆ แล้ว
-> - ดรอปที่อ่านได้ว่างเปล่า (มอนยังโหลดไม่ครบ) จะอ่านใหม่จากตัวถัดไป ไม่จำว่า "ไม่ดรอปอะไร" ไปตลอด
-> - ถ้า server ไม่ตอบ MobDict ภายใน 20 วิ (`LOAD_TIMEOUT`) ขึ้นข้อความให้กด RELOAD ได้ (เดิมค้าง Loading ตลอด)
-> - อ่านค่า cap ของ Luck (`CoreCommons`) เบื้องหลัง ไม่ให้หน้าต่างค้างถ้า require รอ · แถวในรายการคำนวณ threat ใหม่หลัง RELOAD
+> **Fixed (v2.98):** the cause was that the floating windows were plain Frames, which Roblox does not stop clicks on (a click is only stopped by the top-most button), so a click on the window background / text / scroll field reached the main window's button underneath
+> - The background of the Server Browser, Recipe Browser, material popup, dropdown lists, Pinned Items, the Configuration page and the colour picker is now a blank button (same appearance), so a click anywhere in the window stops at that window while the buttons inside still work normally
 
-### [x] ตรวจบัคทุกฟีเจอร์ตั้งแต่ v2.90
-> แก้แล้ว (v3.04): ไล่ดูทุก commit v2.90–v3.03 เจอ 5 จุด
-> - รัน script ซ้ำตอนกำลังสู้/ขุด: `FaceGoblin` (AlignOrientation) ของรอบเก่าค้างใน HumanoidRootPart และยังเปิดอยู่ → ตัวละครหันไม่ได้จนตาย · ตอนนี้รอบเก่าลบ FaceGoblin + attachment และคืน AutoRotate ตอนหยุด · Auto Mining คืน WalkSpeed ที่ล็อกไว้ 0 ด้วย
-> - Leave On Danger Group: ถ้าคนในกลุ่มอันตรายออกจากเซิร์ฟระหว่างรอ Block ระบบนับเป็น 1 ครั้งที่ย้ายเซิร์ฟ ครบ 3 ครั้งแล้วจะหยุดทำงานไปตลอดรอบ (เงียบๆ) · ตอนนี้ไม่นับกรณีนี้แล้ว
-> - Retreat At HP% = 0 ยังถอยตอนเลือดถึง 0 พอดี (เฟรมที่ตาย) · ตอนนี้ 0 = ไม่ถอยเลยจริงๆ
-> - หน้าต่างลอย: ถ้า Roblox ไม่ส่ง MouseLeave สีพื้นตอน hover จะค้าง · ตอนนี้ไม่จำสี hover เป็นสีเดิม
-> - Dropdown ไม่ปิดเมื่อคลิกบนหน้าต่างลอย / Pinned Items (หลัง v2.98 ที่เปลี่ยนเป็นปุ่ม คลิกถูกนับว่า UI รับไปแล้ว) · ตอนนี้คลิกนอก dropdown ที่ไหนก็ปิด
+### [x] Mob Dictionary: v3.01 fails to load the script (LOAD FAILED)
 
-### [x] UI: Text Scale ใน Configuration ใช้ไม่ค่อยได้
-> แก้แล้ว (v3.07):
-> - เดิมคูณขนาดตัวอักษรปัจจุบันด้วยอัตราส่วนแล้วปัดเศษทุกครั้ง → เปลี่ยนไปมาหลายรอบขนาดเพี้ยนไม่กลับค่าเดิม · ตอนนี้จำขนาดตั้งต้นของแต่ละข้อความไว้ (attribute `AICBaseTextSize`) แล้วคิดจาก ขนาดตั้งต้น × scale เสมอ
-> - เดิมมีผลแค่ในหน้าต่างหลัก และข้อความที่สร้างทีหลัง (dropdown, แจ้งเตือน, หน้าต่างลอย, แถวที่สร้างใหม่) ไม่ถูกปรับ · ตอนนี้ปรับทั้ง ScreenGui และข้อความใหม่ก็ใช้ scale ปัจจุบัน
-> - เซฟแบบ global ใน `Global.json` (`UI_TEXT_SCALE`) ใช้ทุกโปรไฟล์ เปิดสคริปต์ใหม่ยังเป็นขนาดเดิม · Reset Default คืนเป็น 1
+> **Fixed (v3.02):** `Features/MobDictionary.lua` had `return Dictionary` duplicated on two lines, so it did not compile and the whole script stopped at the loading screen
+> - Removed the duplicate line · every file was checked with `luau-compile` and all pass
+> - An empty / `None` StatusEffect no longer shows an empty ☠ label
+> - A drop that reads as empty (the mob has not fully loaded) is read again from the next instance instead of remembering "drops nothing" forever
+> - If the server does not answer MobDict within 20 s (`LOAD_TIMEOUT`) it shows a message with a RELOAD button to press (previously it stayed on Loading forever)
+> - The Luck cap value (`CoreCommons`) is read in the background so the window does not hang if the require waits · list rows recalculate threat after RELOAD
 
-### [x] Mob Dictionary: เซฟค่าของดรอปของมอนไว้ (เช็คว่าเคยเซฟแล้วหรือยัง)
-> ทำแล้ว (v3.07):
-> - ดรอปที่อ่านจากมอนตัวจริงเซฟลง `AutoFarmProfiles/MobDrops.json` (ใช้ร่วมทุกโปรไฟล์/PlaceId) และโหลดตอนเปิดสคริปต์ → เห็นดรอปได้เลยแม้มอนยังไม่เกิดในเซิร์ฟรอบนี้
-> - ก่อนเขียนไฟล์จะเช็คก่อนว่ามอนตัวนั้นเคยเซฟแล้วหรือยัง: เขียนเฉพาะตอนยังไม่เคยเซฟ หรือดรอปที่อ่านได้ต่างจากที่เซฟไว้ (เกมอัปเดต) · ถ้าเหมือนเดิมไม่เขียนซ้ำ
-> - แต่ละมอนอ่านจากตัวจริงแค่ครั้งเดียวต่อรอบ · ถ้าอ่านได้ว่าง (อาจยังโหลดไม่เสร็จ) จะไม่ทับของที่เซฟไว้และไม่เซฟค่าว่าง
-> - สแกน `workspace.Mobs` ทุก 5 วินาที (`LIVE_SCAN_INTERVAL`) แม้ไม่ได้เปิดหน้าต่าง Mob Dictionary
+### [x] Bug sweep across every feature since v2.90
 
-### [x] Asset Explorer: ข้อความใน TRAITS ไม่ wrap ลงมา ทะลุ UI
-> แก้แล้ว (v3.08): badge (`Kit.Badge`) เดิมกว้างเท่าข้อความทั้งบรรทัดและไม่ตัดบรรทัด ตัวที่ยาวเลยล้นการ์ด · ตอนนี้กว้างไม่เกินพื้นที่ของการ์ด (`UISizeConstraint` ปรับตามตอนย่อ/ขยายหน้าต่าง) ข้อความที่ยาวกว่านั้นตัดลงบรรทัดใหม่และ badge สูงขึ้นเอง · ใช้กับ badge ใน Mob Dictionary ด้วย
+> **Fixed (v3.04):** went through every commit from v2.90 to v3.03 and found 5 problems
+> - Re-running the script while fighting / mining: the old run's `FaceGoblin` (AlignOrientation) stayed in the HumanoidRootPart still enabled, so the character could not turn until it died · the old run now removes FaceGoblin and its attachment and restores AutoRotate when it stops · Auto Mining also restores the `WalkSpeed` it locked to 0
+> - Leave On Danger Group: if the danger-group player left the server while waiting for the Block, it counted as one server hop, and after 3 the feature silently stopped working for the rest of the run · that case is no longer counted
+> - Retreat At HP% = 0 still retreated at exactly 0 HP (the frame the character dies) · 0 now genuinely means never retreat
+> - Floating windows: if Roblox did not send MouseLeave, the hover background colour got stuck · the hover colour is no longer remembered as the original colour
+> - Dropdowns did not close when clicking on a floating window / Pinned Items (after v2.98 changed them to buttons, the click counted as already handled by the UI) · a click outside the dropdown now closes it wherever it is
 
-### [x] Asset Explorer: type ใต้ชื่อ item ฝั่งซ้ายติดข้อความด้านบน ไม่ auto layout
-> แก้แล้ว (v3.08): ชื่อกับบรรทัดล่าง (type) เดิมวางตำแหน่ง pixel ตายตัว (Y=5 / Y=20) พอขยายตัวอักษรเลยชนกัน · ตอนนี้วางด้วย `UIListLayout` (ห่างกัน `ROW_TEXT_GAP`) อยู่กึ่งกลางแถว และแถวสูงขึ้นเองเมื่อ Text Scale ทำให้ตัวอักษรใหญ่ขึ้น · ใช้กับ Mob Dictionary ด้วย (ใช้ BrowserShell เดียวกัน)
+### [x] UI: Text Scale in Configuration is barely usable
 
-### [x] Feature: FPS Boost (ลดสิ่งไม่จำเป็น เช่น แสง เงา)
-> ทำแล้ว (v3.09): toggle ใหม่ **FPS Boost** (`Features/FpsBoost.lua`) เปิดแล้ว:
-> - Lighting: ปิดเงา (`GlobalShadows`), หมอกไกลสุด, ปิด environment lighting · ปิด post effect ทั้งหมด (Bloom, Blur, SunRays, ColorCorrection, DepthOfField) · Atmosphere ความหนาแน่น 0 · ปิดเมฆ
-> - ใน workspace: ปิด particle, trail, beam, smoke, fire, sparkles, ไฟ (Point/Spot/SurfaceLight), ระเบิด · decal/texture โปร่งใส · part ทุกชิ้นไม่ทอดเงา
-> - Terrain: ปิดคลื่นน้ำ/สะท้อน และหญ้า (Decoration) · ลด render quality เป็นต่ำสุด
-> - ของที่เกิดทีหลัง (มอน, เอฟเฟกต์สกิล) ก็ถูกปิดด้วย · ตั้งค่า Lighting ซ้ำทุก 5 วินาที (`REAPPLY_INTERVAL`) กันเกมเปลี่ยนกลับ · สแกนครั้งแรกทีละ 2000 ชิ้นต่อเฟรม (`SCAN_BATCH`) ไม่ให้ค้าง
-> - ปิด toggle หรือปิดสคริปต์ → คืนค่าเดิมทุกอย่าง · ไม่แตะของ Debug Visualizer
-> - เซฟแบบ global (ใช้ทุกโปรไฟล์)
+> **Fixed (v3.07):**
+> - It used to multiply the current text size by the ratio and round every time, so changing scale back and forth drifted away from the original size · it now remembers each text's base size (attribute `AICBaseTextSize`) and always computes base size × scale
+> - It used to affect only the main window, and text created later (dropdowns, notices, floating windows, newly built rows) was not adjusted · it now adjusts the whole ScreenGui and new text picks up the current scale
+> - Saved globally in `Global.json` (`UI_TEXT_SCALE`), shared by every profile, so reopening the script keeps the same size · Reset Default returns it to 1
 
-### [x] Auto Block / Auto Confirm Block: เช็คว่า block เรียบร้อยแล้วค่อย hop server
-> สาเหตุ: Roblox ใส่ชื่อในลิสต์ block ทันทีที่กดปุ่ม Block ก่อนคำขอ block จะเสร็จจริง (ถ้าล้มเหลวจะเอาออกทีหลัง)
-> Auto Block เห็นชื่อในลิสต์แล้ว hop ทันที เลยอาจตัดคำขอ block กลางทาง แล้วกลับมาเจอคนเดิมอีก
-> แก้แล้ว (v3.10):
-> - hop เมื่อผู้เล่นอยู่ในลิสต์ block ต่อเนื่องครบ 1.5 วิ (`BLOCK_SETTLE_SECONDS`) และ Auto Confirm Block กดเสร็จแล้วเท่านั้น ระหว่างรอขึ้นสถานะ `AUTO BLOCK  CHECKING @ชื่อ`
-> - ถ้า block ล้มเหลวจนชื่อหลุดจากลิสต์ จะเปิดหน้าต่าง Block ใหม่แทนการ hop
-> - ไม่เปิดหน้าต่าง Block ซ้ำระหว่าง Auto Confirm Block ยังกดอยู่ (กันหน้าต่างเด้งทับตอนกำลังกด) ถ้ากดค้างเกิน 20 วิ (`CONFIRM_MAX_SECONDS`) ถือว่าค้างและปล่อยให้ทำงานต่อ
-> - Leave On Danger Group ใช้การเช็คเดียวกันก่อนออก (ยังออกเลยถ้ารอครบ 10 วิแล้วยัง block ไม่ได้ เพื่อความปลอดภัย)
+### [x] Mob Dictionary: Save each mob's drops (and check whether it was already saved)
 
-### [x] Waypoints: เดิน waypoint แล้วตกหลุมตอนต้องโดดข้าม parkour
-> สาเหตุ: เดิน waypoint ใช้แค่ `MoveTo` + เช็คสิ่งกีดขวางข้างหน้า (`DoJumpIfObstacle`) ไม่เคยเช็คว่าข้างหน้าเป็นหลุม เลยเดินตกช่องว่างระหว่าง parkour
-> แก้แล้ว (v3.12): `AICCombatUtils.IsRouteHoleAhead` ยิง raycast ลงพื้นตาม `RootPart.CFrame.LookVector` ทุก 0.5 stud ไปข้างหน้า 2 studs (`ROUTE_HOLE_PROBE_DISTANCE`)
-> - ไม่มีพื้น / เป็นน้ำ / พื้นต่ำกว่าเท้า 1 stud ขึ้นไป (`ROUTE_HOLE_MIN_DEPTH`) = หลุม → กระโดดที่ขอบ
-> - ใช้เฉพาะตอนเดิน waypoint route และ Waypoint Loop เท่านั้น ตอนสู้ / patrol / ขุดแร่เหมือนเดิม
-> - เช็คเฉพาะตอนตัวละครกำลังเดินและยืนบนพื้น (กลางอากาศไม่กระโดดซ้ำ)
+> **Done (v3.07):**
+> - Drops read from a real mob are saved to `AutoFarmProfiles/MobDrops.json` (shared by every profile / PlaceId) and loaded when the script starts, so drops are visible even when that mob has not spawned in this server yet
+> - Before writing the file it checks whether that mob was already saved: it writes only when it has never been saved, or when the drops it just read differ from the saved ones (the game updated) · identical data is not rewritten
+> - Each mob is read from a real instance only once per run · if the read comes back empty (possibly not loaded yet) it neither overwrites what is saved nor saves an empty value
+> - `workspace.Mobs` is scanned every 5 seconds (`LIVE_SCAN_INTERVAL`) even when the Mob Dictionary window is not open
 
-### [x] UI: Font preview + ตรวจ dropdown ที่ใช้ไม่ได้
-> ทำแล้ว (v3.13):
-> - dropdown **Font** ใน Configuration โชว์ชื่อแต่ละ font ด้วย font นั้นเอง (preview) ตัวเลือกพวกนี้ไม่เปลี่ยนตามตอนเลือก font ทั้ง UI
-> - ตัวเลือกที่กดแล้วไม่เปลี่ยนอะไร: GothamBold / GothamBlack / SourceSansItalic / BuilderSansBold ฯลฯ เป็นแค่น้ำหนัก/ตัวเอียงของ font เดิม แต่ UI คงน้ำหนักของแต่ละข้อความไว้ เลยได้ font เดียวกับตัวหลักทุกอย่าง → รวมเหลือ font ละ 1 ตัวเลือก (ค่าที่เคยเซฟเป็นตัวหนาจะโชว์เป็นตัวหลักแทน)
-> - ตอนเปิดสคริปต์ ลองโหลดทุก font เบื้องหลัง (`TextService:GetTextBoundsAsync`) ตัวไหนโหลดไม่ได้จะซ่อนจากรายการ และ warn ชื่อใน console
-> - แก้ dropdown ที่สร้างใหม่ตอนรายการเปลี่ยนแล้วไปโผล่ล่างสุดของ section: Edit Farm Zone, Edit Deadzone, Pair Waypoint, Paired Farm Zone, Add Zone Target, Set Leader, Profile, Add Player In Server (Auto Block) → ใช้ `AICUI.ReplaceDropdown` ที่วางกลับที่เดิม
+### [x] Asset Explorer: Text in TRAITS does not wrap and overflows the UI
 
-### [x] Waypoints: ปรับค่าการเช็คหลุม (v3.12) เองได้
-> ทำแล้ว (v3.14): Profile Settings > Waypoints มี slider 3 อัน บันทึกในโปรไฟล์
-> - **Hole Check Distance** (`ROUTE_HOLE_PROBE_DISTANCE`, ค่าเริ่ม 2, 0.5–6): เช็คหลุมไกลแค่ไหนข้างหน้า = ระยะจากขอบที่จะกระโดด
-> - **Hole Check Step** (`ROUTE_HOLE_SAMPLE_STEP`, ค่าเริ่ม 0.5, 0.25–2): ระยะห่างแต่ละจุดเช็ค ยิ่งน้อยยิ่งจับช่องแคบได้
-> - **Hole Min Depth** (`ROUTE_HOLE_MIN_DEPTH`, ค่าเริ่ม 1, 0.5–10): ลึกเท่านี้ขึ้นไปถึงนับเป็นหลุม (เพิ่มถ้ากระโดดตอนลงบันได)
-> - slider ที่สร้างด้วย `AICUI.AddSettingSlider` ทุกตัวอัปเดตเองตอนโหลดโปรไฟล์ (เดิม slider ของ Mob Gather ไม่อัปเดตตามโปรไฟล์ที่โหลด)
+> **Fixed (v3.08):** the badge (`Kit.Badge`) was as wide as the whole line of text and did not wrap, so a long one overflowed the card · it is now capped to the card's area (`UISizeConstraint`, resized when the window is shrunk / expanded), longer text wraps to a new line and the badge grows taller on its own · also used by badges in the Mob Dictionary
 
-### [x] Waypoints: ติ๊กเลือกได้ว่า waypoint ไหนให้กระโดด
-> สาเหตุ: เช็คหลุมอัตโนมัติ (v3.12/v3.14) ไม่กระโดดในบางจุด เช่นช่องสุดท้ายของ parkour
-> ทำแล้ว (v3.15): รายการ **All Waypoints** มีช่องติ๊ก ☐ ต่อแถว (ข้างช่อง Wait) บันทึกในโปรไฟล์ (`WAYPOINT_JUMPS`)
-> - วาง waypoint ไว้ที่ขอบหลุมแล้วติ๊ก Jump → เดินถึงจุดนั้นจะกระโดดแน่นอน แล้ววิ่งต่อไป waypoint ถัดไป (ควรมี waypoint อีกฝั่งหลุม)
-> - waypoint ที่ติ๊ก Jump นับว่าถึงเมื่อห่างไม่เกิน 1.5 studs (`AICConfig.JUMP_WAYPOINT_REACH`) และยืนบนพื้น ไม่ใช้ Reach Distance ปกติ เพื่อให้โดดที่ขอบพอดี
-> - ใช้ทั้ง route ปกติและ Waypoint Loop · ย้าย/ลบ waypoint ช่องติ๊กย้ายตาม · เช็คหลุมอัตโนมัติยังทำงานเหมือนเดิม
+### [x] Asset Explorer: The type line under the item name on the left collides with the text above it; no auto layout
 
-### [x] UI: บั๊ก dropdown (รอบ 2)
-> แก้แล้ว (v3.16) ใน `UI/Utils.lua` (ตัว dropdown เอง):
-> - **รั่ว**: dropdown ที่สร้างใหม่ตอนรายการเปลี่ยน (รายชื่อผู้เล่น, zone, Teleport ฯลฯ) ทิ้ง RenderStepped + InputBegan ของตัวเก่าค้างไว้ทุกครั้ง สะสมไปเรื่อยๆ ยิ่งเล่นนานยิ่งหน่วง → ตอนนี้ลบ Frame แล้วตัด connection ทั้งหมดและเอาออกจากรายการ dropdown เอง (`component:Destroy()` / `Frame.Destroying`)
-> - **เปิดแล้วไม่เลื่อนไปตัวที่เลือก**: เดิมอ่าน `Position` ซึ่ง UIListLayout ไม่ได้ตั้ง เลยอยู่บนสุดเสมอ (เช่น Font, Profile ที่ยาว) → นับจากลำดับแถวแทน
-> - **ขนาด popup เพี้ยนเมื่อ UI scale ไม่ใช่ 1**: เดิมเอาขนาดบนจอ (pixel) ไปตั้งเป็น offset ที่โดน scale ซ้ำ → แยกหน่วยให้ถูก
-> - **จอสัมผัส**: แตะนอก dropdown ไม่ปิด (เดิมเช็คแค่คลิกเมาส์)
-> - Teleport: ไม่สร้าง dropdown Door / Waypoint ใหม่ระหว่างที่เปิดค้างอยู่ รอปิดก่อน
+> **Fixed (v3.08):** the name and the line beneath it (type) used fixed pixel positions (Y=5 / Y=20), so they collided once the text was scaled up · they are now laid out with `UIListLayout` (`ROW_TEXT_GAP` apart), centred in the row, and the row grows taller by itself when Text Scale makes the text bigger · also used by the Mob Dictionary (both use the same BrowserShell)
 
-### [x] Auto Start Game: บันทึกแบบ global
-> ทำแล้ว (v3.16): **Auto Start Game** ย้ายไปเก็บใน `AutoFarmProfiles/Global.json` เหมือน FPS Boost / Leave On Danger Group ใช้ค่าเดียวกันทุกโปรไฟล์และทุก PlaceId โปรไฟล์ไม่บันทึก/โหลด/export ค่านี้แล้ว
-> - ค่าเดิมที่เคยบันทึกไว้ในโปรไฟล์ไม่ถูกย้ายมา ต้องเปิด toggle ใหม่ครั้งเดียว
+### [x] Feature: FPS Boost (turn off non-essential things such as lights and shadows)
 
-### [x] UI: Theme ไม่ save
-> แก้แล้ว (v3.17): สีที่ตั้งใน Configuration (กด **APPLY**) ไม่เคยถูกบันทึกเลย เปิดใหม่ก็กลับเป็นสีเดิม
-> - ตอนนี้เก็บใน `AutoFarmProfiles/Global.json` (`UI_THEME`) เหมือน Font / Text Scale ใช้ร่วมทุกโปรไฟล์และทุก PlaceId และโหลดกลับตอนเปิดสคริปต์
-> - เก็บเฉพาะสีที่ต่างจากค่าเริ่มต้น · กด **RESET DEFAULT** จะล้างค่าที่บันทึกไว้ด้วย
+> **Done (v3.09):** new **FPS Boost** toggle (`Features/FpsBoost.lua`); when on:
+> - Lighting: shadows off (`GlobalShadows`), fog distance maxed, environment lighting off · all post effects off (Bloom, Blur, SunRays, ColorCorrection, DepthOfField) · Atmosphere density 0 · clouds off
+> - In workspace: particles, trails, beams, smoke, fire, sparkles, lights (Point/Spot/SurfaceLight) and explosions off · decals/textures made transparent · every part stops casting shadows
+> - Terrain: water waves/reflections and grass (Decoration) off · render quality lowered to the minimum
+> - Things created later (mobs, skill effects) are disabled too · the Lighting settings are reapplied every 5 seconds (`REAPPLY_INTERVAL`) in case the game reverts them · the first scan walks 2000 instances per frame (`SCAN_BATCH`) so nothing stalls
+> - Turning the toggle off or stopping the script restores everything · Debug Visualizer objects are left alone
+> - Saved globally (shared by every profile)
 
-### [x] Waypoint: dropdown กดไม่ได้
-> แก้แล้ว (v3.17): dropdown ถูกลบแล้วสร้างใหม่ทั้งที่รายการเหมือนเดิม ถ้าสร้างใหม่ระหว่างกดเมาส์ลงกับปล่อย คลิกนั้นจะหายไป
-> - Teleport **Waypoint** / **Door**: folder `Waypoints` / `Interactions` มีของเข้าออกตลอด (โหลดตามระยะ) เดิมสร้าง dropdown ใหม่ทุก 0.5 วินาที → ตอนนี้สร้างใหม่เฉพาะเมื่อรายการเปลี่ยนจริง
-> - Profile Settings **Pair Waypoint** / **Paired Farm Zone**: เดิมสร้างใหม่ 2 รอบทุกครั้งที่แก้ waypoint / zone (รวมถึงตอนเลือกใน dropdown เอง) → ตอนนี้สร้างใหม่เฉพาะเมื่อจำนวน waypoint / zone เปลี่ยน ที่เหลือแค่อัปเดตค่าที่เลือก
+### [x] Auto Block / Auto Confirm Block: Check that the block succeeded before hopping servers
 
-### [x] UI: dropdown ทั้งระบบกดเลือกไม่ได้ (รอบ 3)
-> อาการ: รายการเปิดขึ้น แต่กดเพิ่ม/เลือกตัวเลือกไม่ได้ ทุก dropdown
-> อาการยืนยัน: **ตัวเลือกสุดท้ายกดไม่ได้เสมอ** → พิกัดเมาส์ (`GetMouseLocation` รวมแถบบน ~36px) ถูกเลื่อนลงจากพิกัด GUI ประมาณ 1 แถว
-> สาเหตุ: ตัวเช็ค "คลิกนอก dropdown แล้วปิด" เทียบพิกัดเมาส์/นิ้ว (`GetMouseLocation` / `input.Position` + `GetGuiInset`) กับ `AbsolutePosition` ซึ่งเพี้ยนได้จากแถบบนของ Roblox / ScreenInsets → กดที่ตัวเลือกแต่ถูกนับว่ากดข้างนอก รายการปิดตอนกดลง ตอนปล่อยเลยไม่โดนปุ่ม
-> แก้แล้ว (v3.20): เลิกเทียบพิกัด ใช้ `InputBegan` ของปุ่ม dropdown, รายการ และทุกตัวเลือกเอง (Roblox เช็คให้ว่ากดโดนอะไร) แล้วรอ 1 เฟรมค่อยตัดสินว่ากดข้างนอกหรือไม่ ใช้ได้ทั้งเมาส์และจอสัมผัส
-> - แก้เพิ่ม (v3.20): dropdown ที่อยู่ล่างๆ ของหน้ายาว (ต้องเลื่อนก่อนถึง) เปิดแล้วปิดเองทันที เพราะเดิมปิดทุกครั้งที่หน้าหลักขยับ แม้แค่ momentum / เด้งหลังปัด หรือหน้าหดแล้วตำแหน่งเลื่อนถูกบีบ → ตอนนี้รายการเลื่อนตามปุ่ม ปิดเฉพาะเมื่อปุ่มเลื่อนพ้นขอบหน้า
-> - เอาปุ่ม **+ ADD** ออกจากทุก priority list: เป็นของค้างจาก UI template ต้นฉบับ (Initial commit) ที่ไม่เคยต่อการทำงาน กดแล้วไม่เกิดอะไร การเพิ่มของทำผ่าน dropdown "Add ..." ข้างๆ อยู่แล้ว
+> **Cause:** Roblox adds the name to the block list the moment the Block button is clicked, before the block request really completes (if it fails the name is removed again afterwards)
+> Auto Block saw the name in the list and hopped immediately, which could cut the block request off halfway, and then ran into the same player again
+> **Fixed (v3.10):**
+> - It hops only once the player has been in the block list continuously for 1.5 s (`BLOCK_SETTLE_SECONDS`) and Auto Confirm Block has finished clicking; while waiting it shows the status `AUTO BLOCK  CHECKING @name`
+> - If the block fails and the name drops out of the list, the Block window is opened again instead of hopping
+> - It does not open another Block window while Auto Confirm Block is still clicking (so windows do not stack up mid-click); if the click hangs for more than 20 s (`CONFIRM_MAX_SECONDS`) it is treated as stuck and work continues
+> - Leave On Danger Group uses the same check before leaving (it still leaves anyway once the 10 s wait is up and the block has not landed, for safety)
 
-### [x] Whitelist / Danger: บันทึกแบบ global
-> ทำแล้ว (v3.21): **Block Whitelist** และ toggle **Whitelist Skips Safety** ย้ายไปเก็บใน `AutoFarmProfiles/Global.json` ใช้ร่วมทุกโปรไฟล์และทุก PlaceId โปรไฟล์ไม่บันทึก/โหลด/export ค่านี้แล้ว
-> - ฝั่ง Danger (**Leave On Danger Group**, **Danger Groups**, **Danger Whitelist**) เป็น global อยู่แล้วตั้งแต่ก่อนหน้า ไม่ต้องแก้
-> - ย้ายของเดิมให้อัตโนมัติครั้งแรก: Block Whitelist = รวมรายชื่อจากทุกโปรไฟล์ของ PlaceId ที่เปิดอยู่ตอนนั้น (ไม่ซ้ำ), Whitelist Skips Safety = ค่าของโปรไฟล์ที่ใช้ล่าสุด
-> - โปรไฟล์ของ PlaceId อื่นไม่ถูกรวม (ย้ายครั้งเดียวจาก PlaceId แรกที่เปิด) ถ้ามีรายชื่ออยู่ที่อื่นต้องเพิ่มเอง
+### [x] Waypoints: Walking a waypoint route falls into a hole where a parkour jump is required
+
+> **Cause:** walking waypoints only used `MoveTo` plus a check for obstacles ahead (`DoJumpIfObstacle`) and never checked whether the ground ahead was a hole, so the character walked off the gap between parkour platforms
+> **Fixed (v3.12):** `AICCombatUtils.IsRouteHoleAhead` raycasts down to the ground along `RootPart.CFrame.LookVector` every 0.5 studs up to 2 studs ahead (`ROUTE_HOLE_PROBE_DISTANCE`)
+> - No ground / water / ground more than 1 stud below the feet (`ROUTE_HOLE_MIN_DEPTH`) counts as a hole, so the character jumps at the edge
+> - Only used while walking a waypoint route and in Waypoint Loop; fighting / patrol / mining are unchanged
+> - Only checked while the character is walking and standing on the ground (no jumping again in mid-air)
+
+### [x] UI: Font preview + find dropdown options that do nothing
+
+> **Done (v3.13):**
+> - The **Font** dropdown in Configuration shows each font's name in that font (preview); these options do not change with the UI font selection
+> - Options that changed nothing when clicked: GothamBold / GothamBlack / SourceSansItalic / BuilderSansBold etc. are only other weights/italics of the same font, and since the UI keeps each text's own weight they all produced the same font as the main one → they were merged into one option per font (a value previously saved as bold now shows as the regular option)
+> - When the script starts it tries to load every font in the background (`TextService:GetTextBoundsAsync`); any font that fails to load is hidden from the list and its name is warned to the console
+> - Fixed dropdowns that were rebuilt when their list changed reappearing at the bottom of the section: Edit Farm Zone, Edit Deadzone, Pair Waypoint, Paired Farm Zone, Add Zone Target, Set Leader, Profile, Add Player In Server (Auto Block) now use `AICUI.ReplaceDropdown`, which puts them back where they were
+
+### [x] Waypoints: Make the hole-check values from v3.12 configurable
+
+> **Done (v3.14):** Profile Settings > Waypoints has 3 sliders, saved in the profile
+> - **Hole Check Distance** (`ROUTE_HOLE_PROBE_DISTANCE`, default 2, 0.5–6): how far ahead the hole is checked, i.e. the distance from the edge at which the character jumps
+> - **Hole Check Step** (`ROUTE_HOLE_SAMPLE_STEP`, default 0.5, 0.25–2): spacing between check points; smaller catches narrower gaps
+> - **Hole Min Depth** (`ROUTE_HOLE_MIN_DEPTH`, default 1, 0.5–10): at least this deep counts as a hole (raise it if the character jumps while going down stairs)
+> - Every slider built with `AICUI.AddSettingSlider` now updates itself when a profile is loaded (the Mob Gather sliders previously did not follow the loaded profile)
+
+### [x] Waypoints: Tick which waypoints should jump
+
+> **Cause:** the automatic hole check (v3.12/v3.14) does not jump at some spots, such as the last gap of a parkour
+> **Done (v3.15):** the **All Waypoints** list has a ☐ tick box per row (next to the Wait field), saved in the profile (`WAYPOINT_JUMPS`)
+> - Place a waypoint at the edge of a hole and tick Jump → reaching that point always jumps, then the character runs on to the next waypoint (there should be a waypoint on the far side of the hole)
+> - A waypoint with Jump ticked counts as reached when the character is within 1.5 studs (`AICConfig.JUMP_WAYPOINT_REACH`) and standing on the ground, instead of the normal Reach Distance, so it jumps right at the edge
+> - Used by both the normal route and Waypoint Loop · moving/removing a waypoint moves its tick box with it · the automatic hole check still works as before
+
+### [x] UI: Dropdown bugs (round 2)
+
+> **Fixed (v3.16)** in `UI/Utils.lua` (the dropdown itself):
+> - **Leak**: rebuilding a dropdown when its list changed (player names, zones, Teleport, etc.) left the old one's RenderStepped + InputBegan connections behind every time, piling up and getting laggier the longer the session ran → the Frame is now removed and all its connections cut, and it is taken out of the dropdown list itself (`component:Destroy()` / `Frame.Destroying`)
+> - **Opening does not scroll to the selected row**: it used to read `Position`, which UIListLayout does not set, so it always stayed at the top (e.g. the long Font and Profile lists) → it counts from the row index instead
+> - **Popup size distorted when the UI scale is not 1**: the on-screen (pixel) size was written back as an offset and then scaled a second time → the units are now kept separate
+> - **Touch screens**: tapping outside the dropdown did not close it (previously only mouse clicks were checked)
+> - Teleport: the Door / Waypoint dropdowns are no longer rebuilt while one is open; it waits for it to close
+
+### [x] Auto Start Game: Store globally
+
+> **Done (v3.16):** **Auto Start Game** moved to `AutoFarmProfiles/Global.json` like FPS Boost / Leave On Danger Group, so the same value is shared by every profile and every PlaceId; profiles no longer save/load/export this value
+> - Old values already saved in a profile are not migrated; the toggle must be turned on once
+
+### [x] UI: Theme is not saved
+
+> **Fixed (v3.17):** the colours set in Configuration (clicking **APPLY**) were never saved at all, so reopening brought back the old colours
+> - They are now stored in `AutoFarmProfiles/Global.json` (`UI_THEME`) like Font / Text Scale, shared by every profile and every PlaceId, and loaded when the script starts
+> - Only colours that differ from the defaults are stored · **RESET DEFAULT** also clears the saved values
+
+### [x] Waypoint: Dropdown cannot be clicked
+
+> **Fixed (v3.17):** the dropdown was destroyed and rebuilt even when its list was unchanged; if that happened between mouse-down and mouse-up, the click was lost
+> - Teleport **Waypoint** / **Door**: the `Waypoints` / `Interactions` folders have things entering and leaving constantly (loaded by distance) and the dropdown used to be rebuilt every 0.5 seconds → it is now rebuilt only when the list really changes
+> - Profile Settings **Pair Waypoint** / **Paired Farm Zone**: it used to be rebuilt twice on every waypoint / zone edit (including while choosing from the dropdown itself) → it is now rebuilt only when the number of waypoints / zones changes, and otherwise just updates the selected value
+
+### [x] UI: Dropdowns across the whole system cannot be selected (round 3)
+
+> **Symptom:** the list opens, but no option can be added/selected, in any dropdown
+> **Confirmed symptom:** **the last option is never clickable** → the mouse coordinates (`GetMouseLocation`, including the ~36px top bar) are shifted about 1 row away from the GUI coordinates
+> **Cause:** the "clicked outside the dropdown, so close it" check compared mouse/finger coordinates (`GetMouseLocation` / `input.Position` + `GetGuiInset`) against `AbsolutePosition`, which can drift because of Roblox's top bar / ScreenInsets → the click hit the option but was counted as outside, the list closed on press, and the release never landed on the button
+> **Fixed (v3.20):** coordinates are no longer compared; it uses `InputBegan` on the dropdown button, the list and every option itself (Roblox works out what was pressed) and waits 1 frame before deciding that the press was outside. Works with both mouse and touch screens
+> - Also fixed (v3.20): a dropdown near the bottom of a long page (one that has to be scrolled to) opened and closed itself immediately, because it used to close whenever the main page moved, even just momentum / the bounce after a flick, or the page shrinking and squeezing the position → the list now moves with the button and closes only when the button is scrolled past the page edge
+> - Removed the **+ ADD** button from every priority list: it was left over from the original UI template (Initial commit) and was never wired up, so clicking it did nothing; items are added through the "Add ..." dropdown next to it anyway
+
+### [x] Whitelist / Danger: Store globally
+
+> **Done (v3.21):** **Block Whitelist** and the **Whitelist Skips Safety** toggle moved to `AutoFarmProfiles/Global.json`, shared by every profile and every PlaceId; profiles no longer save/load/export this value
+> - The Danger side (**Leave On Danger Group**, **Danger Groups**, **Danger Whitelist**) has already been global since before, so nothing needed changing
+> - Existing values are migrated automatically the first time: Block Whitelist = the names from every profile of the PlaceId open at that moment (deduplicated), Whitelist Skips Safety = the value of the profile used most recently
+> - Profiles of other PlaceIds are not merged (the migration runs once, from the first PlaceId opened), so names kept elsewhere must be added by hand

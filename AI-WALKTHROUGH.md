@@ -78,7 +78,7 @@ When adding code:
 Every shipped change bumps the version:
 - `TITLE` in `Init.lua` (`"AUTOMATED INDUSTRY COMPLEX vX.YY"`)
 - the commit subject ends with `(vX.YY)`. Use conventional-commit prefixes (`feat:`/`fix:`) and a body that explains the behavior and names any new tuning constants.
-- `TODO.md` (written in Thai) gets the request/bug under `## To Do` or `## To Fix` as `### [x] Area: title`, followed by a `> ทำแล้ว (vX.YY): ...` / `> แก้แล้ว (vX.YY): ...` note. Write these notes in Thai to match.
+- `TODO.md` (written in English) gets the request/bug under `## To Do` or `## To Fix` as `### [x] Area: title`, followed by a `> **Done (vX.YY):** ...` / `> **Fixed (vX.YY):** ...` note. Write these notes in English to match.
 
 Tuning values are named UPPER_SNAKE constants near the top of the file that uses them (e.g. `RETREAT_FACE_HOLD`, `SWIM_FACE_MAX_PITCH`).
 
