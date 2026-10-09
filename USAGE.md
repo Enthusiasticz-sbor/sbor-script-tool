@@ -1,0 +1,588 @@
+# AIC usage guide
+
+How to use Automated Industry Complex (AutoFarmV3, `v3.21`) once it is loaded. The
+loadstring and what the loader fetches are in [README.md](README.md); this file is
+about the features and about why the farm sometimes appears to do nothing.
+
+Everything below is read from the code. Where a behaviour depends on the game
+exposing a particular object or remote, it is marked `(in-game check)`, because the
+script can only be verified by running it inside a Roblox client.
+
+## Before anything works
+
+These are the conditions the farm loop checks before it will move a single stud. If
+any one is missing, **the loop returns without a word** — no error, no notice, and
+no FARM STATE update. That is almost always why "toggling it on does nothing".
+
+1. **An executor, not Studio.** The script needs `loadstring`, `game:HttpGet` and
+   `getgenv`. In Studio the loader itself will not work.
+2. **The weapon must be worn, not in the backpack.** `Feature:Update` looks for a
+   child of your character named exactly `Sword` that contains a `MainWeld`, and it
+   reads `MainWeld.Part1` (which is `UpperTorso` while the sword is sheathed). There
+   is no code anywhere that equips a tool out of the Backpack: if the sword is not
+   already in the character the loop bails every frame. `(in-game check)` on the
+   exact name — if your weapon is called something else, nothing downstream runs.
+3. **`PlayerStats`** must exist under the local Player, and **`InputBindableFunction`**
+   under PlayerGui. These are what the loop reads for level, stamina and the
+   Equip/Interact presses.
+4. **A target list.** This is the one people miss. Auto Farm only attacks entities
+   that are on the active target list — see *How Auto Farm decides what to do*
+   below. With an empty list **no mob is ever a target**, and the farm stands still
+   showing `IDLE (NO TARGET)`. Outside the two places that ship with a built-in
+   target list (`10299594856` and `11987539001`), the list starts empty.
+5. **A profile, if you want to keep anything.** Waypoints, zones, ores and recipes
+   are saved per profile, and profiles are stored per place
+   (`AutoFarmProfiles/<PlaceId>.json`). Adding a waypoint or a zone with no profile
+   loaded reports `CREATE / LOAD PROFILE FIRST` in the STATUS line, and the built-in
+   place presets are read-only (`DEFAULT PLACE_CONFIG IS READ-ONLY`).
+
+## How Auto Farm decides what to do
+
+`Features/AutoFarming.lua` is a feature module: `Init.lua` puts it in
+`Context.Features` and `Core/Heartbeat.lua` calls `Feature:Update(dt)` on every
+`RunService.Heartbeat`. One heartbeat runs this chain, in order, and the first test
+that matches usually ends the frame:
+
+1. Refresh WalkSpeed (by level) and the UI position.
+2. No character, or dead → reset route and target state and stop.
+3. Refresh the status labels every 0.5 s, and revalidate the mob list.
+4. **Party hold** (`PARTY HOLD`) → stand still.
+5. **Auto Farm off** (`AUTO FARM OFF`) → Auto Smithing still runs; nothing else moves.
+6. **Prerequisite gate** → no `InputBindableFunction`, no `Sword`/`MainWeld`, or no
+   `PlayerStats`: stop silently. *(This is the silent one — see Troubleshooting.)*
+7. Deadzone escape → if it is standing in a deadzone, leave and stop.
+8. **Retreat.** An enemy skill makes it retreat until the skill ends; health below
+   **Retreat At HP%** makes it retreat until health recovers (or, on the route, keeps
+   walking). **Execute Charge at HP%** overrides retreat to finish a low-health
+   target. Retreating skips everything below.
+9. Drink a potion when **Auto Heal at HP%** is met (and not mid-dodge).
+10. **Auto Block:** an un-whitelisted player past **Block Delay (s)** is blocked, then
+    the server is left once the block settles. With a Party Leader set, Party handles
+    intruders instead.
+11. Server older than the game's play-time limit → hop.
+12. **The waypoint route.** While `WAYPOINTS: n/m` has not reached the end, the loop
+    only walks: reach checks, `Wait (s)` holds (`WAYPOINT WAIT`), jump waypoints,
+    hole and stuck jumps. **It does not fight and does not mine or craft yet.**
+13. Once the route is done, in this order: **Waypoint Loop** (`WAYPOINT LOOP`), then
+    **Auto Smithing**, then **Auto Mining** (`MINING / SMITHING`), then **Return To
+    Farm Zone** (`RETURN TO FARM ZONE`), then **Gather Mobs** (`GATHER`), then target
+    acquisition and combat (`CHASE …`), then **Auto Patrol** (`PATROL`), else
+    `IDLE (NO TARGET)` and it stands still.
+14. Finally: jump probes, swim recovery, and the attack itself — or, while the route
+    is unfinished, the `InteractButton` press.
+
+With **Auto Find** on, step 12 is skipped entirely: there is no route, so it goes
+straight to targets. That is the switch for "I do not want to walk anywhere".
+
+### What it is allowed to attack
+
+`AICCombat.GetActiveTargetList()` is the single source of truth, and it returns
+exactly one of these, in this order of precedence:
+
+1. **Your duel opponent**, if you are in a duel — nothing else counts while it lasts.
+2. **The current farm zone's Zone Targets**, if that zone has any.
+3. **Enemy Priority** (the ordered list in the Targeting section).
+
+A mob is a candidate only if its entity name (`Config.Entity` inside
+`workspace.Mobs`) is on that list, and mobs are re-scanned every frame, so a mob
+that is not on the list is invisible to the farm no matter how close it is. The
+order of the list is the order they are preferred; **Target Type** only breaks ties
+between entries of equal rank.
+
+### FARM STATE readouts
+
+The Status tab's `FARM STATE` line names what the loop did on that frame. It is the
+fastest way to tell a broken setup from a working one:
+
+| FARM STATE | What it means |
+|---|---|
+| `AUTO FARM OFF` | The toggle is off. If the toggle looks on but this is showing, the button state and the loop state disagree — toggle it off and on again. |
+| `PARTY HOLD` | Party System is resetting or waiting to Tp to its Leader. |
+| `RETREAT (Skill)` / `RETREAT (Health)` | Dodging an enemy skill, or healing after low health. |
+| `RETURN TO FARM ZONE` | Walking back into the farm zone (or out of a deadzone). |
+| `AUTO BLOCK  @name` | Blocking that player; `AUTO BLOCK  CHECKING @name` means waiting for the block to settle before hopping. |
+| `SERVER TOO OLD, HOPPING` | The server's age limit was reached. |
+| `WAYPOINT WAIT` | Standing at a waypoint that has a `Wait (s)` set. |
+| `ROUTE  #n` | Walking waypoint `n`. No fighting happens in this state. |
+| `WAYPOINT LOOP` | Waypoint Loop is choosing which paired zone to farm. |
+| `MINING / SMITHING` | Auto Mining or Auto Smithing owns the frame. |
+| `GATHER` | Gather Mobs is pulling a pack together. |
+| `CHASE  <mob>  <dist>  //  <step>` | Closing on that target; the step names what the movement code chose. |
+| `PATROL` | Auto Patrol is looking for targets. |
+| `IDLE (NO TARGET)` | Nothing to fight — usually an empty target list. |
+| *(line never changes)* | The loop is bailing at the prerequisite gate before it can write anything. |
+
+## Quick start from a fresh profile
+
+1. Load the script (see [README.md](README.md)) and wait for the window.
+2. **Equip your sword** so the tool is inside your character, and stand where mobs
+   spawn — the mob pickers can only list mobs the game has loaded near you.
+3. Create a profile in **Profile Settings** (type a name, press **Create New
+   Profile**). Without this, waypoints and zones cannot be saved.
+4. Farming tab → **Targeting** → **Add Mob Target** → pick the mobs you want (two or
+   three is enough). Each pick is added to **Enemy Priority**. The Mob Dictionary's
+   **ADD TO ENEMY PRIORITY** button does the same for anything you look up.
+5. Optional but recommended: add a **farm zone** (**Add Farm Zone Here**) where you
+   want it to fight, and a few **waypoints** (**Add Waypoint Here**) if you want it
+   to walk a route first. With no farm zone nothing is restricted; with no waypoints
+   it fights wherever you are.
+6. Make sure **Auto Farm** is on, and watch `FARM STATE`. A healthy startup looks
+   like `ROUTE  #1` while it walks, then `CHASE  …`, and `IDLE (NO TARGET)` only when
+   nothing eligible is alive.
+7. If it stands still on `IDLE (NO TARGET)` with mobs in sight, add those mobs to
+   Enemy Priority — being able to see a mob is not the same as being allowed to
+   attack it.
+
+## Tab reference
+
+The rest of this file walks the window tab by tab. Every control listed exists in
+the code with that exact label; defaults and ranges come from the profile schema in
+`Core/SaveConfig.lua`.
+
+### Farming tab
+
+The Farming tab is where the farm loop is switched on and told what to fight: the feature
+toggles at the top of the tab, then the Targeting, Auto Block and Mob Gather sections. Every
+toggle here is saved in the active profile unless it is marked global.
+
+#### Features
+
+The toggles appear in the order their modules start, so the exact order can differ between
+versions; each one writes its saved value straight away.
+
+- **Auto Farm** (default on) — the main loop. Useful only once the Targeting section has at least one entry, or the farm zone the character is in has Zone Targets; with none it stands still on `IDLE (NO TARGET)`.
+- **Auto Block** (on) — blocks players who are not on the Block Whitelist, then leaves the server. Delayed by **Block Delay (s)**; without Auto Confirm Block it needs you to press Block.
+- **Auto Confirm Block** (off) — presses Block in Roblox's block dialog for you. Executor only (it reads CoreGui), works with Auto Block.
+- **Safe Combat** (on) — fights from outside enemy weapon reach, backing off and circling. Off, it fights up close at the distance in **Close Combat Range**.
+- **Auto Find** (off) — ignores the waypoint route and goes straight for targets; needs a target list to find anything.
+- **Ignore Farm Zone** (off) — fights and mines anywhere instead of only inside farm zones; it also ignores the zone's Zone Targets rule.
+- **Auto Patrol** (off) — walks around the farm zone looking for targets when none are near. Needs at least one farm zone, otherwise there is nowhere to patrol.
+- **Return To Farm Zone** (on) — walks back inside the farm zone after leaving it, or after the route ends outside it. Needs farm zones.
+- **Auto Skill** (on) — uses the weapon skill on the target when it is off cooldown.
+- **Gather Mobs** (off) — pulls a pack of mobs together and hits them with the skill. Pace it with **Min Mobs**, **Max Mobs** and **Gather Radius** in the Mob Gather section below. Runs inside the Auto Farm loop, so it does nothing with Auto Farm off.
+- **Refill Booster** (on) — resets the character when an EXP or drop boost runs out, so the game refills it. Saved under the `ResetOnBoostOut` key, so older profiles keep working.
+- **Safe Booster Reset** (off) — makes Refill Booster wait until no mob is hitting you before resetting.
+- **Auto Start Game** (off, global) — clicks through the title screen into the game. Shared by every profile: it runs before a profile has been loaded.
+- **FPS Boost** (off, global) — turns off shadows, post effects, particles, lights and water waves for frames. Shared by every profile; it is about the machine, not the farm.
+- **Debug Visualizer** (on) — master switch for the world overlays; the individual debug toggles are on the Debug tab.
+
+The same section ends with three sliders that belong to the combat loop:
+
+- **Execute Charge at HP%** (default 0, range 0–90) — below this much health a target is finished off instead of retreated from. 0 disables it, and an incoming enemy skill still overrides it.
+- **Retreat At HP%** (40, 0–80) — retreat below this share of health. 0 means never retreat, not even on the frame health reaches 0.
+- **Auto Heal at HP%** (65, 30–80) — drinks the last used potion at or below this share.
+
+Auto Mining, Auto Smithing, Leave On Danger Group and Join Alerts also exist as toggles, but on
+the Mining, Crafting and Server tabs respectively; the Party System toggle is on the Party tab.
+
+#### Targeting
+
+This section decides what the character is allowed to attack: an ordered priority list, a
+tie-break, the retreat thresholds, the fighting distances, and two pickers for adding targets.
+
+- **Add Mob Target** — dropdown of the mobs that are currently loaded: it reads the `Entity` name out of `Config` on every model in `workspace.Mobs`. Stand where the mobs spawn before picking; picking one adds it to Enemy Priority.
+- **Add Player Target** — dropdown of the players in this server except you, shown as `@name`. Adding one makes that player a target like a mob.
+- **Enemy Priority** — the ordered list of targets, first to last. Drag a row to reorder. This is the list the loop reads when the current farm zone has no Zone Targets, so an empty list means no target is ever chosen.
+- **Target Type** — tie-break between targets of equal priority: `Disabled` (the default: nearest first), `Highest HP` or `Lowest HP`.
+- **Retreat At HP%** (40, 0–80) — same value as the slider in Features; either one changes the retreat threshold.
+- **Auto Heal at HP%** (65, 30–80) — same value as the slider in Features.
+- **Execute Charge at HP%** (0, 0–90) — same value as the slider in Features.
+- **Safe Enemy Range** (4, 0–30) — extra gap kept from enemy weapons, used while Safe Combat is on.
+- **Close Combat Range** (6, 4–12) — how far from the target it fights with Safe Combat off; 4 is just clear of the body, 12 is weapon reach.
+- **Refresh Detected Targets** — rebuilds both pickers immediately instead of waiting for the next refresh.
+- **Open Mob Dictionary** — opens the floating dictionary: health, speed, threat, drops, and an **ADD TO ENEMY PRIORITY** button (that button needs a profile to be loaded).
+
+With a farm zone picked in Profile Settings, that zone's own Zone Targets replace Enemy Priority
+while the character is inside it, so the same mobs can be fought in a different order per zone.
+
+#### Auto Block
+
+Handles players who are not on the whitelist, and the list itself. The whitelist and Whitelist
+Skips Safety are shared by every profile and every place, unlike the rest of this tab.
+
+- **Block Delay (s)** (0, 0–120) — how long a stranger may stay before being blocked and the server left. 0 acts at once; each player's delay starts when they are first seen.
+- **Whitelist Skips Safety** (on, global) — players on the Block Whitelist never make Auto Block or Leave On Danger Group leave the server, even if already blocked.
+- **Block Whitelist** — the UserIds Auto Block never touches. Entries show as `UserId  ·  @name` once the name is known; drag to reorder.
+- **Add Player In Server** — dropdown of the players in this server, listed as `DisplayName (@name)  UserId`. Picking one whitelists them.
+- **User ID** — textbox for a raw UserId to whitelist.
+- **Add User ID** — adds the UserId typed above; digits only.
+- **Add Everyone Here** — whitelists every other player in the server in one press.
+- **Refresh Player List** — rebuilds the dropdown now.
+- **Clear Whitelist** — removes everyone from the Block Whitelist.
+
+#### Mob Gather
+
+Gather Mobs turns the pull-and-skill pack routine on; these three controls say what counts as a
+pack and how big it may get. It runs inside the farm loop after the waypoint route, so Auto Farm
+must be on, and it fights on its own while it works, which skips the normal combat for that frame.
+
+- **Min Mobs** (3, 2–8) — fewest mobs that make gathering worth starting, all of them within Gather Radius of each other.
+- **Max Mobs** (5, 2–10) — most mobs pulled into one pack before the skill is used.
+- **Gather Radius** (40, 15–80) — how close together the mobs must be to count as one pack.
+
+### Profile Settings tab
+
+Everything here is per profile and per place: the route the character walks, the areas it may
+fight in, the areas it must stay out of, and the profiles themselves. The "Default Config" entry
+in the Profile dropdown is read-only — pressing any Add/Edit/Clear button without a profile
+loaded reports `CREATE / LOAD PROFILE FIRST` in the STATUS line.
+
+#### Profiles
+
+- **STATUS:** — one line telling you what just happened: which profile loaded, or why it did not.
+- **Profile Name** — the name used by Create New Profile, and filled with the active profile's name.
+- **Create New Profile** — saves the current settings under the name above and switches to it.
+- **Save Profile** — writes the current settings into the active profile.
+- **Export Save** — copies the active profile to the clipboard as text to share.
+- **Import Data** — textbox for pasted profile text.
+- **Import Save** — creates a profile from the text above.
+- **Delete Profile** — deletes the active profile and falls back to the place defaults.
+- **Profile** — the dropdown that loads a profile. On startup it auto-loads the profile last used in this place, if there is one.
+
+#### Waypoints
+
+The route walked before farming starts. Waypoints are recorded as positions, so they are per
+place as well as per profile.
+
+- **Add Waypoint Here** — adds a waypoint at the character's current position.
+- **All Waypoints** — the numbered route, each row showing its position. Rows with a paired zone show `> Z#`, and dragging a row reorders the route along with its wait, zone pair and jump tick.
+- **Wait (s)** — per-row number of seconds to stand at that waypoint before moving on (0 up to `AICConfig.MAX_WAYPOINT_WAIT`). While waiting the character stands still and does not fight.
+- **Jump** — per-row tick: jump on reaching that waypoint. Put the waypoint at the edge of a gap and the next one on the far side.
+- **Clear Waypoints** — removes every waypoint.
+- **Waypoint Reach Distance** — how close counts as reaching a waypoint (default 5 studs). Higher values cut corners; too high can skip a waypoint entirely.
+- **Hole Check Distance** (2, 0.5–6) — how far ahead the route looks for a gap to jump, in studs.
+- **Hole Check Step** (0.5, 0.25–2) — spacing between those ground checks; smaller catches narrow gaps.
+- **Hole Min Depth** (1, 0.5–10) — a drop at least this deep counts as a hole worth jumping.
+- **Pair Waypoint** / **Paired Farm Zone** — pair one waypoint with one farm zone. The pair is what waypoint **Waypoint Loop** follows, and it also tells the loop which zone to fight in after the route.
+- **Waypoint Loop** (off) — turns the route into a loop over the paired zones only: it farms the zone paired with the waypoint it reached, and walks between paired zones when a zone has nothing to fight. Needs at least one waypoint paired with a farm zone, otherwise it has nothing to loop over.
+
+#### Farm Zones
+
+The areas the character is allowed to fight in. With no farm zone at all, nothing is restricted
+and it fights wherever the target is; with one or more, it stays inside them.
+
+- **Farm Radius** (100, 1–500) — size of the zone picked in **Edit Farm Zone**.
+- **Add Farm Zone Here** — adds a circular zone centred on the character, using the current Farm Radius.
+- **Edit Farm Zone** — picks which zone the radius and Zone Targets apply to.
+- **Zone Targets** — targets for the picked zone, in order. Empty means the zone falls back to Enemy Priority; that is why a zone can be worth filling in.
+- **Add Zone Target** — dropdown that adds a mob or player to the picked zone's Zone Targets.
+- **All Farm Zones** — the zone list; drag to reorder, which also changes the order Waypoint Loop walks them in.
+- **Clear Farm Zones** — removes every farm zone.
+
+#### Deadzones
+
+Areas the character never fights in and never walks through, checked by combat, mining and the
+route. Dead zones are independent of farm zones, so they can be used with none configured.
+
+- **Deadzone Radius** (35, 1–250) — size of the zone picked in **Edit Deadzone**.
+- **Add Deadzone Here** — adds a deadzone centred on the character, using the current Deadzone Radius.
+- **Edit Deadzone** — picks which deadzone the radius applies to.
+- **All Deadzones** — the deadzone list, drag to reorder.
+- **Clear Deadzones** — removes every deadzone.
+
+### Mining tab
+
+Mining is not a second farm loop: Auto Mining is offered the frame by Auto Farm, so it only acts while **Auto Farm** is on and only once the waypoint route has been walked (`STATUS  WAITING FOR WAYPOINT ROUTE` while the route is still being walked, `WAITING FOR AUTO FARM` while Auto Farm is off). It never mines outside a mine zone, and when there is nothing to mine it hands the frame straight back to farming. The tab has two sections, **Auto Mining** and **Mine Zone**.
+
+#### Auto Mining
+
+- **Auto Mining** (off by default) — the toggle. Switching it on with no mine zone configured warns you instead of starting: "Add a mine zone first; ores outside one are never mined."
+- **STATUS** — one line, rewritten every 0.25 s, saying what mining is doing: `OFF`, `WAITING FOR AUTO FARM`, `WAITING FOR WAYPOINT ROUTE`, `WALKING TO  <ore>`, `CLAIMING  <ore>`, `MINING  <ore>  3.2s`, `DEFENDING`, `IDLE  //  NO MINE ZONE`, `IDLE  //  NO ORES IN PRIORITY`, `IDLE  //  NOTHING TO MINE`. Reading this line is the fastest way to see why nothing is being mined.
+- Mining runs in rounds: it picks the highest-priority ore that has a free node in a mine zone, walks to it with the shared walk controller, claims it from within 15 studs, then stands still for the game's mining cooldown plus 0.15 s. **WalkSpeed is held at 0 while claiming or mining**, so nothing can walk the character off the node (the game cancels mining, and can kick, when it gets too far away).
+- Anything within 10 studs while a job is on is fought: the weapon is drawn and hit once in range, and the status shows `DEFENDING`. Retreating on low health still outranks mining, as it does for farming.
+- A node it cannot reach in 15 s is skipped for 30 s, and a claim that another player takes over within 1 s is dropped rather than fought over.
+
+#### Ore Priority
+
+The list of ores to collect, in the order to collect them; each row carries its own target count. Ores are mined top to bottom, and each one is mined until the inventory holds its `Target`.
+
+- **Ore Priority** (default `Iron Ore` 500, `Copper Ore` 500) — the list itself. Drag a row to reorder it, or use the ▲▼ buttons; the number box on each row is that ore's `Target`, 0–500 (`ITEM_MAX_STACK`, the game's per-item cap). What you already carry counts toward the target, so 250 held against a target of 500 leaves 250 to go.
+- When every node of the top ore is unavailable — taken by another player, still regenerating, or unreachable — it moves on to the next ore in the list instead of waiting. Ore outside every mine zone, or inside a deadzone, is never chosen.
+- **Add Ore** — dropdown of ores currently loaded near you that are not already in the list ("No ores found" when there are none). It is rebuilt only when that set changes, and never while you have it open.
+- **Ore Name** + **Add Ore By Name** — for an ore that is streamed out of range: type its exact name and add it. The text box clears after adding.
+- **Refresh Ore List** — rebuilds the **Add Ore** options on demand (e.g. after you walk to a different part of the map).
+- Adding a name that is already in the list reports "`<ore>` is already in the list" rather than duplicating the row.
+
+#### Mine Zone
+
+Auto Mining works only inside mine zones, so this section is what makes the rest of the tab do anything. Zones are saved with the profile (like farm zones and deadzones), so different profiles can hold different sets.
+
+- **All Mine Zones** — the list of zones, each row showing `#<n>  R:<radius>  (<centre>)` (the index, the radius and the centre). Drag to reorder, or use ▲▼; each row can be removed.
+- **Add Mine Zone Here** — adds a zone at your current position, with the radius currently set on the slider below.
+- **Edit Mine Zone** — picks which zone the radius slider applies to.
+- **Mine Zone Radius** (5–300, default 60) — size of the zone picked in **Edit Mine Zone**.
+- **Clear Mine Zones** — removes every mine zone, which stops mining until one is added again.
+- Any zone edit needs a profile: without one loaded it reports `CREATE / LOAD PROFILE FIRST`, and a built-in place preset is read-only ("DEFAULT PLACE_CONFIG IS READ-ONLY"). Load or create a profile first, then add zones.
+- Cross-reference: the Debug tab's **Debug Mine Zones** draws the zones and **Debug Ore Status** labels each ore with what mining thinks of it — `TARGET`, `CLAIMING`, `MINING  2.0s`, `READY  120 / 500`, `DONE  500 / 500`, `TAKEN  <player>`, `REGENERATING`, `OUTSIDE MINE ZONE`, `IN DEADZONE`, `NOT IN PRIORITY`, `UNREACHABLE`.
+
+### Crafting tab
+
+Crafting uses a smithing table: with **Auto Farm** on it runs after the waypoint route is walked and *before* Auto Mining, and it is never pulled off a table mid-craft by mining. With Auto Farm off it still works on its own — it walks to a table and crafts. The tab has the **Auto Smithing** section, plus **Recipe Status** and **Material Reserve** below it.
+
+#### Auto Smithing
+
+- **Auto Smithing** (off by default) — the toggle.
+- **STATUS** — what crafting is doing right now (also `OFF` while the toggle is off).
+- **SMITHING SKILL  <n>** — your current smithing skill, read from the game; recipes above it are skipped.
+- **TABLE  NEAREST** or `TABLE  SET  (x, y, z)` — which table is in use. `NEAREST` means it picks whichever table is closest; otherwise it uses the position you saved.
+- Recipes are worked in priority order, one craft at a time. A recipe is skipped when your SmithingSkill is below the recipe's `CraftingSkill`, when the materials left after reserves do not cover even one craft, or when the inventory already holds its `Target`. Once it decides, it walks to the table and calls `CraftingStart` from within 8 studs; the strike minigame is then played automatically. A craft ends when the minigame shows its result and the window closes, and the next one waits for the inventory to update.
+- Three failed crafts in a row pause that recipe for 60 s (`PAUSED AFTER FAILURES`) so one bad recipe cannot stall the list; the other recipes keep going.
+- A table it cannot reach in 30 s, or cannot path to, is skipped for 30 s. Mobs that get in the way while walking are fought first, then it carries on.
+- **Set Smithing Table** — stand within 20 studs of a table and press it to save that table for this profile. It saves the position, not the instance (the Id can change between servers), and later matches a table within 10 studs of that spot. Needs a profile loaded, otherwise `CREATE / LOAD PROFILE FIRST`.
+- **Use Nearest Table** — forgets the saved table and goes back to using whichever is closest.
+- **Open Recipe Browser** — opens the floating Recipe Browser window described below.
+- **Refresh Recipes** — reloads the recipe and material data, and rebuilds the **Add Material** options.
+
+#### Recipe Priority
+
+The recipes to craft, in order, each with its own target count. Recipes are crafted top to bottom until each reaches its `Target`.
+
+- **Recipe Priority** (default `Iron Ingot` 500, `Copper Ingot` 500) — drag a row to reorder, or use ▲▼; the number box per row is that recipe's `Target`, 0–500 (`ITEM_MAX_STACK`). Setting a target of 0 effectively parks that recipe.
+- This is the same list as the **PRIORITY** tab inside the Recipe Browser — editing either one reloads the other. Newer recipes are added from the Browser's **RECIPE** tab.
+
+#### Recipe Status
+
+One line per recipe in the priority list, refreshed about once a second, telling you exactly why a recipe is or is not being crafted:
+
+- `#1  Iron Ingot  120/500  //  READY  x3` — craftable now, and how many crafts the materials allow.
+- `//  LOCKED  SKILL 2 / 1` — the recipe needs skill 2 and you have 1.
+- `//  NEED Iron Ore 3/1` — the material that is short, with how many you have against how many one craft needs (counted after reserves).
+- `//  DONE` — the inventory already holds the target.
+- `//  PAUSED AFTER FAILURES` — three failures in a row; it resumes after 60 s.
+- `//  UNKNOWN RECIPE` — a name in the list that the recipe data does not know.
+- `NO RECIPES IN PRIORITY` — the list is empty, so nothing will be crafted.
+
+#### Material Reserve
+
+Materials listed here are kept back and never spent on crafting, which is how you stop Auto Smithing from eating ore you want for something else.
+
+- **Keep In Inventory** (empty by default) — one row per material, each with a `Keep` count (0–500, default 0). The recipe planner subtracts these before deciding whether it can craft.
+- **Add Material** — dropdown of every material any recipe uses that has no reserve row yet ("No materials found" when there are none). Adding one reports "Reserve added for `<material>`; set how many to keep" — the row starts at 0 until you set it.
+- Reserves apply to the priority list and to `NEED`/`MISSING` counts shown in the Recipe Browser.
+
+#### Recipe Browser
+
+A floating, draggable window opened with **Open Recipe Browser**; everything about crafting can be done from it without the main window. It re-reads your inventory and skill every 1 s while open.
+
+- Left side: every recipe, narrowed by the search box (it matches recipe or material names, so typing an ore name finds every recipe that uses it), the item-type chips (`ALL  <count>`, plus one chip per type), and a **READY ONLY** filter. Each row shows the skill needed and its status, so locked, short-of-materials and craftable recipes are distinguishable at a glance.
+- **RECIPE** tab — the recipe you picked: its type, level or skill, stats, whether it is tradeable, `SMITHING SKILL <needed>  ·  YOURS  <yours>  ·  HAVE  <held>`, a status line, and `MATERIALS PER CRAFT  (tap one to see how it is made)` with have/need and missing counts per material (after reserves). Tapping a material opens a small popup next to the row saying what it is crafted from, and from there you can open that recipe.
+- **CRAFT NOW  ·  UP TO <n>** — a craft order for the picked recipe, with an `Amount` slider, an amount box, `MAX` and `CRAFT`. An order runs *before* the priority list and works even with **Auto Smithing off**. The running order is shown as `ORDER  <name>  <done> / <count>` with a `CANCEL` button, and it stops on its own when the count is done or it cannot continue (materials, skill too low, paused after failures).
+- **ADD TO RECIPE PRIORITY** / **REMOVE FROM RECIPE PRIORITY** — adds or removes the picked recipe from the same priority list shown on the Crafting tab.
+- **PRIORITY** tab — the recipe priority list itself, with the note "Recipes are crafted top to bottom until each reaches its Target. Add them from the RECIPE tab."
+- **Open Asset Explorer** (on the Crafting tab) — a separate window for every item: stats, price, recipe, drops and uses. Useful for finding what a material is for or where a drop comes from.
+
+### Party tab
+
+Keeps the farm on the same server as a chosen player: when that Leader leaves, the character follows with the game's `tp friend` command. Nothing here does anything until the toggle is on **and** a Leader is picked.
+
+#### Controls
+
+- **Party System** (default off) — the tab's master switch. With no Leader set the tab stays idle.
+- **Set Leader** (dropdown) — the other players in this server, each shown as `DisplayName (@Name)`. Picking one saves the Leader into the profile; only a player still in this server can be picked, and the list rebuilds as people join and leave.
+- **LEADER:  NONE** (readout) — the Leader currently saved for this profile.
+- **STATUS:  IDLE** (readout) — what the system is doing, e.g. `WITH LEADER`.
+- **Clear Leader** (button) — stops following anyone.
+- **Refresh Player List** (button) — rebuilds the dropdown from the server right now.
+
+#### What happens when
+
+- With the Leader in the server: the farm runs normally, strangers included — Party does not block anyone.
+- Something other than the Leader joins and the Leader leaves: the character is reset and held still, awaiting the Leader's move.
+- The Leader is already gone: the character is reset, `TeleportEvent(0)` is fired, and 0.5 s later `ChatEvent` fires `Party, tp friend <LeaderName>`. A try counts as successful once the Leader is in the same server.
+- Failing tries cost `PARTY_TP_ATTEMPT_TIMEOUT` (15 s) each, up to `PARTY_TP_ATTEMPTS` (3). After that it waits `PARTY_FAILED_COOLDOWN` (60 s), and during that pause Auto Block handles intruders again.
+- While Party is following a Leader it takes over intruder handling from Auto Block entirely, so the Block Delay has no effect then.
+- Needs the game's `TeleportEvent` and `ChatEvent` remotes; if one is missing a notice appears instead of a silent failure.
+
+### Server tab
+
+This server's live numbers plus leaving it: hop at random, rejoin, or join by Job ID. The hop and the browser read Roblox's public server list with `game:HttpGet`, so they are **executor only** — in Studio they report that the list could not be loaded.
+
+#### Current Server
+
+- **PLAYERS  0**, **JOB ID  -**, **FPS  --**, **PING  -- MS**, **STATUS  IDLE** (readouts) — players against the maximum with the place name (`PLAYERS  n / m  //  <place>`, the name from `MarketplaceService:GetProductInfo`), the Job ID, frame rate, network ping and the hop engine's state. FPS colours at 50/30, ping at 100/200 ms.
+- **Rejoin** (button) — rejoins this exact server by Job ID; unavailable if the server reports no Job ID.
+- **Server Hop** (button) — picks a random public server that is not full, reading up to `HOP_MAX_PAGES` (4) pages of the list. Pressing it again while one is already finding a server does nothing.
+- **Copy Job ID** (button) — copies this server's Job ID to the clipboard.
+- **Job ID** (textbox) + **Join Job ID** (button) — joins the Job ID typed in; an empty value or this server's own ID is refused with a notice.
+- **Open Server Browser** (button) — opens the browser window below.
+
+#### Server Browser window
+
+- The list puts this server first and marks it `◆  YOU ARE HERE  ·  n / m PLAYERS`; other rows show players, `PING … · FPS …` and a shortened Job ID.
+- **REFRESH** / **LOAD MORE** (buttons) — reload the list, or read the next page.
+- The right pane shows `◇  THIS SERVER` or `◇  PUBLIC SERVER`, `PLAYERS n / m`, `PING … · FPS …`, the full `JOB ID`, then **COPY JOB ID** and **JOIN**. Until something is picked it reads `Pick a server from the list`.
+- Only the current server can list player names under `PLAYERS IN THIS SERVER`; for other servers Roblox reports counts only, which the window states.
+
+#### Server Safety
+
+- **Leave On Danger Group** (default off; shared by every profile) — leaves when someone in a Danger Group is in the server. The roster is re-checked every `SCAN_INTERVAL` (2 s), so taking someone off a list is acted on.
+- **Danger Groups** (priority list) — the group IDs that count as dangerous. Ships with `5928691`.
+- **Group ID** (textbox) + **Add Group ID** (button) — validates a numeric ID, rejects duplicates, and clears the box.
+- **Danger Whitelist** (priority list) — UserIds this feature stays for even when their group matches. Separate from the Auto Block whitelist.
+- **Add Player In Server** (dropdown) — players in this server not already on the Danger Whitelist, each shown with their UserId.
+- **User ID** (textbox) + **Add User ID** (button) — adds a UserId typed by hand; non-numeric input is refused.
+- **Clear Danger Whitelist** (button) — empties that list.
+- On a trigger: it waits up to `DANGER_BLOCK_WAIT` (10 s) for the block to land (so a dialog can be pressed by hand when Auto Confirm Block is off) and then leaves anyway, retrying the hop up to `DANGER_HOP_MAX_ATTEMPTS` (3) times, `DANGER_HOP_RETRY_DELAY` (3 s) apart. A group lookup that fails is retried `GROUP_CHECK_MAX_ATTEMPTS` (3) times, 5 s apart, and only one "could not check" notice appears per 60 s.
+
+#### Alerts and Log
+
+- **Join Alerts** (default off) — notices when someone off the Block Whitelist joins or is already here. Players arriving close together are merged into one notice, and the same message is suppressed for `NOTICE_COOLDOWN` (8 s).
+- **Player Log** (readout, 15 rows) — the most recent JOINED / LEFT / PRESENT entries with time and name, tagged `[WHITELIST]`, `[DANGER WHITELIST]` or `[DANGER]`; keeps the last `LOG_LIMIT` (100).
+- **Clear Log** (button) — empties it.
+
+### Teleport tab
+
+Warps the character to the doors and waypoints the game exposes, for travelling without walking. It moves only the character; nothing else about the farm changes.
+
+- **Door** (dropdown) + **Teleport To Door** (button) — the doors found in `workspace.Interactions`, one entry per point as `<place>  T1` / `<place>  T2`.
+- **Refresh Doors** (button) — rebuilds that dropdown from the folder. Doors stream in and out as you move, so the list follows the folder automatically and only rebuilds when it really changes.
+- **Waypoint** (dropdown) + **Teleport To Waypoint** (button) — the game's own waypoints from `workspace.Waypoints`, i.e. only the ones currently streamed in. Pressing it with nothing picked reports "Pick a waypoint first".
+- **Refresh Waypoints** (button) — rebuilds the waypoint dropdown.
+- **Waypoint Number** (textbox) + **Teleport To Number** (button) — warps to a waypoint number directly, including one that has not streamed in yet; a non-numeric or negative entry is refused with a notice.
+
+### Quest tab
+
+Taking a quest by ID, and finding its objectives in the world.
+
+- **Quest ID** (textbox) + **Assign Quest** (button) — asks the game for that quest through its remote. If the remote is not in the place, a notice says so instead of failing quietly.
+- **Quest ESP** (toggle, default off) — highlights the QuestItems folder.
+- **Show All Quest Items** (toggle, default off) — tags every item in the folder rather than only the names typed below.
+- **Quest Targets** (textbox) — the item names to find, comma separated; case, spaces and symbols are ignored when matching.
+- **Rescan Quest Targets** (button) — searches the folder again and reports how many targets were tagged.
+- **Copy Quest Info** (button) — copies what the game shows for your quest, writing a dump file as well when file storage is available, so targets can be set from it later.
+- Limits: `MAX_HIGHLIGHTS` (20) highlights and `MAX_TAGS` (200) labels at once, distances refreshed every `UPDATE_INTERVAL` (0.25 s), labels hidden past `LABEL_MAX_DISTANCE` (5000 studs), and items that stream in later are tagged as they arrive.
+
+### Status tab
+
+A read-only window on what the farm is doing, plus two buttons.
+
+- **FARM STATE  --** (readout) — what the farm loop did this frame.
+- **PLACE ID**, **WALKSPEED**, **WAYPOINTS:  n / m**, **EVENT CURRENCY**, **PLAY TIME**, **POSITION**, **DEATH**, **EXP** (readouts) — the current place, walk speed, route progress, event currency, time on the server, position, death count and experience.
+- **Reset Stats** (button) — fires `StatsEvent` with 0 for Vitality, Agility, Luck, Strength and Defense. A stat at or above `STAT_RESET_THRESHOLD` (500) is refused with a notice, so allocated points are not wiped by accident.
+- **Show Pinned Items** (toggle) — shows the floating Pinned Items panel, which is the only way back after its × closes it. Panel contents, open/closed state and position live in the global `PinnedItems.json`.
+- **Reset Pinned Items Position** (button) — docks the panel back on the right.
+
+### Debug tab
+
+World-space drawing for the zones, routes and targets the farm uses. Everything here is saved per profile.
+
+- **Debug Visualizer** (default on, in the Features section) — master switch; off removes the debug folder from the workspace.
+- **Debug Waypoints** (default on) — waypoint markers and the route.
+- **Debug Farm Zones** (default on) — farm zone circles.
+- **Debug Deadzones** (default on) — deadzone circles.
+- **Debug Mine Zones** (default on) — mine zone circles.
+- **Debug Ore Status** (default on) — a label per ore with what Auto Mining thinks of it. Fed by Auto Mining, so it needs that feature running to update.
+- **Debug Smithing Tables** (default on) — a label per smithing table with its state. Fed by Auto Smithing the same way.
+- **Radius Billboard Labels** (default on) — each zone's number and radius over it.
+
+### Configuration panel
+
+Opened from the **CONFIGURATION** button at the bottom of the window (`SYSTEM CONFIGURATION  //  THEME / WINDOW / TYPOGRAPHY`). It holds the theme swatches (click a swatch for the colour picker; hex/RGB), the window size limits, the text scale and the font. All three of those live in `AutoFarmProfiles/Global.json` and are **shared by every profile and PlaceId**, so they are not part of a profile export.
+
+- **Font** (dropdown) — every Roblox font, each option previewed in its own font; picking one retargets the whole UI at once and is saved immediately. Fonts that fail to load are hidden and warned about in the console.
+- **TEXT SCALE** (number field, 0.8–2.2) — resizes text across the whole window and floating windows. Each text remembers its base size, so scaling back and forth does not drift.
+- **MIN WIDTH / MIN HEIGHT / MAX WIDTH / MAX HEIGHT** (number fields) — the resize limits for the main window.
+- **APPLY** (button) — applies the theme colours typed or picked above; colours identical to the built-in theme are not saved.
+- **RESET DEFAULT** (button) — restores the default theme, window size, text scale and font, and clears the saved copies.
+- **RETURN** (button) — closes the panel without further changes.
+
+## Troubleshooting
+
+Start from the `FARM STATE` line on the Status tab: it is written by the farm loop
+itself, so it is the difference between "the loop is running and picked no target"
+and "the loop is not running at all".
+
+### The silent failure mode
+
+`Feature:Update` returns without any message at three places, before it writes a
+FARM STATE line at all: no `InputBindableFunction`, no `Sword`/`MainWeld` in the
+character, or no `PlayerStats`. A fourth, quieter one is the deadzone escape
+(`HandleDeadzoneEscape`), which returns on the frames it has something to do.
+
+The symptom is always the same: the toggle is on, nothing moves, and the console is
+clean. If `FARM STATE` is not updating at all:
+
+1. Check the sword is **worn** (a `Sword` tool inside your character, with a
+   `MainWeld` child). A sword in the Backpack does not count and the script never
+   takes it out for you. `(in-game check)` the name — the loop looks for `Sword`
+   exactly.
+2. Check you are not standing in a deadzone (**Debug Deadzones** draws them) and
+   that `PlayerStats` exists under your Player.
+3. Confirm the script actually started: the boot window reaching 100% and the tabs
+   appearing means `Init.lua` got that far.
+
+### Nothing to fight
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `IDLE (NO TARGET)` with mobs in sight | Enemy Priority is empty, or does not name those mobs | **Add Mob Target** while standing near them, or Mob Dictionary → **ADD TO ENEMY PRIORITY**. Mobs the game has not loaded yet cannot be picked. |
+| `IDLE (NO TARGET)` with a target list filled in | The mobs are outside every farm zone, or inside a deadzone | Farm zones constrain where things may be fought. Delete them, or move the zone, or turn on **Ignore Farm Zone**. |
+| `PATROL` on and off, no fighting | Auto Patrol is looking for targets on its own; the list is still empty | Add targets, as above. |
+| `CHASE …` but it never lands a hit | Engagement range: it closes, then stops to fight | Read the step after `//` in the FARM STATE line; **Close Combat Range** (Safe Combat off) and **Safe Enemy Range** (Safe Combat on) decide how close it stands. |
+| One mob targeted forever while others are ignored | Target locking is deliberately sticky | Reorder **Enemy Priority**, or set **Target Type** to `Highest HP` / `Lowest HP`. |
+
+### It walks a route forever
+
+While the waypoint route is unfinished, the loop only walks — by design there is no
+fighting, mining or crafting until `WAYPOINTS` reaches the end. So:
+
+- `ROUTE  #n` that never advances means that waypoint cannot be reached. Raise
+  **Waypoint Reach Distance**, delete the offending waypoint (**Clear Waypoints** and
+  add fresh ones), or turn on **Auto Find** to skip the route entirely.
+- `WAYPOINT WAIT` is that row's `Wait (s)` doing its job — set it back to 0.
+- A route copied from a place preset will not fit a different place: presets exist
+  only for two PlaceIds, and anything you record is per profile **and** per place.
+
+### Mining and crafting
+
+- **Auto Mining** needs all of: Auto Farm on, the waypoint route finished, a mine
+  zone configured (it warns "Add a mine zone first; ores outside one are never
+  mined"), and at least one ore in **Ore Priority**. Its own STATUS line names which
+  of these is missing.
+- **Auto Smithing** runs with Auto Farm off too, but needs a table within reach and
+  a recipe it is allowed to craft. **Recipe Status** says exactly which rule stopped
+  it: `LOCKED SKILL`, `NEED <material>`, `DONE`, `PAUSED AFTER FAILURES`.
+- Both fight off anything that comes close, so a build-up of mobs can look like
+  mining or crafting "hanging"; the STATUS line will say `DEFENDING` while that
+  happens.
+
+### Server behaviour that looks like a bug
+
+- Being hopped or blocked shortly after joining is Auto Block working. Put the
+  players on the **Block Whitelist** (**Add Everyone Here** is the quick way), or
+  raise **Block Delay (s)**.
+- With a Party Leader set, the **Block Delay** has no effect: Party handles
+  intruders instead.
+- **Leave On Danger Group** is global and off by default; if it is on, any player in
+  a group on **Danger Groups** makes the script leave.
+
+### Profiles
+
+- `CREATE / LOAD PROFILE FIRST` — add or edit a waypoint, zone, ore or recipe only
+  after creating or loading a profile.
+- `DEFAULT PLACE_CONFIG IS READ-ONLY` — the built-in preset cannot be edited; make a
+  profile and the edits go there.
+- `IMPORT FAILED: PlaceId mismatch` — an exported profile only imports into the same
+  place it came from.
+- Font, Text Scale, Theme, **Block Whitelist**, **Whitelist Skips Safety**,
+  **Leave On Danger Group**, **Danger Groups**, **Danger Whitelist**, **Auto Start
+  Game**, **FPS Boost** and the Pinned Items panel are stored globally
+  (`AutoFarmProfiles/Global.json`), shared by every profile and place, and are not
+  part of a profile export.
+
+### Executor-only
+
+**Auto Confirm Block** (presses Roblox's block dialog, reads CoreGui) and the
+**Server Hop** / **Open Server Browser** buttons (they read Roblox's public server
+list over `game:HttpGet`) cannot work in Studio, and **Auto Start Game** depends on
+clicking the game's own title UI. Everything else in the window is plain Roblox API.
+
+### What this guide cannot prove
+
+The object and remote names the script expects — the `Sword` tool, `MainWeld`,
+`PlayerStats`, `InputBindableFunction`, `workspace.Mobs[*].Config.Entity`,
+`UseConsumable`, `TeleportEvent`, `ChatEvent`, `StatsEvent`, the `Interactions` and
+`Waypoints` folders — come from the game, and none of them can be checked from the
+source alone. Where a name does not match, the feature is usually silent rather than
+erroring, which is why `FARM STATE` and the per-tab STATUS lines are worth reading
+before assuming something is broken.
