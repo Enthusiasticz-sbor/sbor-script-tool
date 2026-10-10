@@ -68,7 +68,24 @@ return {
             if UtilsModule and UtilsModule:IsA("ModuleScript") then
                 Utils = require(UtilsModule)
             else
-                local UtilsChunk = assert(loadstring(game:HttpGet("https://raw.githubusercontent.com/Endmin1strator/Automated-Industry-Complex/refs/heads/main/UI/Utils.lua"), "@Utils.lua"))
+                --// Same base as Init.lua's BASE, override included: this path
+                --// only runs when Init did not create the window, and it has to
+                --// fetch the same build rather than another repo's copy.
+                local Base = "https://raw.githubusercontent.com/Enthusiasticz-sbor/sbor-script-tool/refs/heads/main/"
+
+                local Ok, Env = pcall(function()
+                    return type(getgenv) == "function" and getgenv() or nil
+                end)
+
+                if Ok and type(Env) == "table" and type(Env.AICBaseURL) == "string" and Env.AICBaseURL ~= "" then
+                    Base = Env.AICBaseURL
+
+                    if not string.find(Base, "/$") then
+                        Base = Base .. "/"
+                    end
+                end
+
+                local UtilsChunk = assert(loadstring(game:HttpGet(Base .. "UI/Utils.lua"), "@Utils.lua"))
                 Utils = UtilsChunk()
             end
             UI = Utils.new("AUTOMATED INDUSTRY COMPLEX")

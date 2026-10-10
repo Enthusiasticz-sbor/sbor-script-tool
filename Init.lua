@@ -8,10 +8,39 @@ local UTILS_PATH = "UI/Utils.lua"
 local FETCH_RETRIES = 2
 
 local BRANCH = "main"
-local BASE =
-    "https://raw.githubusercontent.com/Endmin1strator/Automated-Industry-Complex/refs/heads/"
-    .. BRANCH
-    .. "/"
+
+--// Where every module is downloaded from. The default is this repository, so
+--// what runs in the executor is what was pushed here - pointing at another
+--// repo made a pushed fix invisible to it. Set getgenv().AICBaseURL before
+--// loading to run from somewhere else: a fork, or
+--// "https://raw.githubusercontent.com/<user>/<repo>/<sha>/" to pin one build.
+--// The trailing slash is added when it is missing.
+local BaseOverride = nil
+
+do
+    local Ok, Env = pcall(function()
+        return type(getgenv) == "function" and getgenv() or nil
+    end)
+
+    if Ok
+        and type(Env) == "table"
+        and type(Env.AICBaseURL) == "string"
+        and Env.AICBaseURL ~= ""
+    then
+        BaseOverride = Env.AICBaseURL
+    end
+end
+
+if BaseOverride and not string.find(BaseOverride, "/$") then
+    BaseOverride = BaseOverride .. "/"
+end
+
+local BASE = BaseOverride
+    or (
+        "https://raw.githubusercontent.com/Enthusiasticz-sbor/sbor-script-tool/refs/heads/"
+        .. BRANCH
+        .. "/"
+    )
 
 local ROOT =
     (typeof(script) == "Instance" and script:IsA("ModuleScript"))

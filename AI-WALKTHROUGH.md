@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 A Roblox auto-farm script ("Automated Industry Complex", aka AutoFarmV3) written in Luau. It has no build, lint or test tooling. Nothing can be run locally: the code only runs inside a Roblox client, so every change is "done but not tested in-game" until the user checks it (`TODO.md` uses `[x]` with that same meaning).
 
 It runs in two ways (`Init.lua`):
-- **Remote (executor):** `Init.lua` downloads every file in parallel from `raw.githubusercontent.com/Endmin1strator/Automated-Industry-Complex/refs/heads/main/` and `loadstring`s it. **Pushing to `main` ships the change to users.** Runtime also has a hardcoded fallback URL for `UI/Utils.lua`.
+- **Remote (executor):** `Init.lua` downloads every file in parallel from `raw.githubusercontent.com/Enthusiasticz-sbor/sbor-script-tool/refs/heads/main/` (or from `getgenv().AICBaseURL` when it is set) and `loadstring`s it. **Pushing to `main` ships the change to users.** Runtime reads the same override for the `UI/Utils.lua` it falls back to.
 - **Local (Studio):** when `Init` is a ModuleScript, it `require`s sibling ModuleScripts in folders that mirror the repo layout.
 
 ## Module system

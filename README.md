@@ -7,8 +7,11 @@
 itself, so pointing an executor at a single feature file does nothing.
 
 ```lua
-loadstring(game:HttpGet("https://raw.githubusercontent.com/Endmin1strator/Automated-Industry-Complex/refs/heads/main/Init.lua"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Enthusiasticz-sbor/sbor-script-tool/refs/heads/main/Init.lua"))()
 ```
+
+`Init.lua` then downloads every module from the same repository, so a change
+only reaches an executor once it is pushed to `main` here.
 
 That fetches `UI/Utils.lua` plus the 60 modules in `MODULES` in parallel (62
 requests), compiles them, starts them dependency-first, then hands
@@ -16,11 +19,11 @@ requests), compiles them, starts them dependency-first, then hands
 `game:HttpGet`, `LocalPlayer`/`PlayerGui`); `getgenv` only enables the
 re-execution guard, so Studio uses the local path instead.
 
-- **The download base is hardcoded.** `BASE` at the top of `Init.lua` points at
-  `Endmin1strator/Automated-Industry-Complex`, branch `main`, so loading a fork's
-  `Init.lua` still runs that repo's modules until the constant is changed.
-  `Core/Runtime.lua` holds a second copy of the URL for `UI/Utils.lua`, used only
-  when something other than `Init.lua` starts Runtime.
+- **The download base** is `BASE` at the top of `Init.lua`, defaulting to
+  `Enthusiasticz-sbor/sbor-script-tool`, branch `main`. Set
+  `getgenv().AICBaseURL` before loading to run from a fork or a pinned build
+  instead; `Core/Runtime.lua` reads the same override for the `UI/Utils.lua` it
+  fetches when something other than `Init.lua` starts Runtime.
 - **Pin a version** by replacing `main` with a commit SHA
   (`.../<user>/<repo>/<sha>/Init.lua`), so an exact build can be re-run even
 after a later push.
