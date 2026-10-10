@@ -106,6 +106,9 @@ return {
         UIRef.TargetSection = UIRef.FarmTab:AddSection("Targeting")
         UIRef.BlockSection = UIRef.FarmTab:AddSection("Auto Block")
         UIRef.GatherSection = UIRef.FarmTab:AddSection("Mob Gather")
+        --// Holds AutoRefill's booster list: which boosters reset the character
+        --// when they run out.
+        UIRef.BoosterSection = UIRef.FarmTab:AddSection("Booster Reset")
         UIRef.StatusSection = UIRef.StatusTab:AddSection("Live Status")
         UIRef.DebugSection = UIRef.DebugTab:AddSection("Debug Visualizer")
         UIRef.MineSection = UIRef.MineTab:AddSection("Auto Mining")

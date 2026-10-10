@@ -146,8 +146,8 @@ the code with that exact label; defaults and ranges come from the profile schema
 ### Farming tab
 
 The Farming tab is where the farm loop is switched on and told what to fight: the feature
-toggles at the top of the tab, then the Targeting, Auto Block and Mob Gather sections. Every
-toggle here is saved in the active profile unless it is marked global.
+toggles at the top of the tab, then the Targeting, Auto Block, Mob Gather and Booster Reset
+sections. Every toggle here is saved in the active profile unless it is marked global.
 
 #### Features
 
@@ -164,7 +164,7 @@ versions; each one writes its saved value straight away.
 - **Return To Farm Zone** (on) — walks back inside the farm zone after leaving it, or after the route ends outside it. Needs farm zones.
 - **Auto Skill** (on) — uses the weapon skill on the target when it is off cooldown.
 - **Gather Mobs** (off) — pulls a pack of mobs together and hits them with the skill. Pace it with **Min Mobs**, **Max Mobs** and **Gather Radius** in the Mob Gather section below. Runs inside the Auto Farm loop, so it does nothing with Auto Farm off.
-- **Refill Booster** (on) — resets the character when an EXP or drop boost runs out, so the game refills it. Saved under the `ResetOnBoostOut` key, so older profiles keep working.
+- **Refill Booster** (on) — resets the character when a booster runs out, so the game refills it. Which boosters count is chosen in the Booster Reset section below. Saved under the `ResetOnBoostOut` key, so older profiles keep working.
 - **Safe Booster Reset** (off) — makes Refill Booster wait until no mob is hitting you before resetting.
 - **Auto Start Game** (off, global) — clicks through the title screen into the game. Shared by every profile: it runs before a profile has been loaded.
 - **FPS Boost** (off, global) — turns off shadows, post effects, particles, lights and water waves for frames. Shared by every profile; it is about the machine, not the farm.
@@ -223,6 +223,20 @@ must be on, and it fights on its own while it works, which skips the normal comb
 - **Min Mobs** (3, 2–8) — fewest mobs that make gathering worth starting, all of them within Gather Radius of each other.
 - **Max Mobs** (5, 2–10) — most mobs pulled into one pack before the skill is used.
 - **Gather Radius** (40, 15–80) — how close together the mobs must be to count as one pack.
+
+#### Booster Reset
+
+Which boosters **Refill Booster** resets the character for. The boosters are the game's, so the
+section finds them itself: every value under `PlayerStats` whose name contains `boost` gets a
+toggle of its own, rather than the script deciding in advance how many kinds there are. Names it
+has never seen are listed and start switched off.
+
+- **BOOSTERS** (readout) — every booster found, each marked `ON` or `off`. `none found yet` while `PlayerStats` does not exist; the scan waits for the game to create it, and **Refresh Boosters** looks again on demand.
+- One toggle per booster, labelled with the game's own name — **ON** means that booster running out resets the character, so one kind of boost can refill while another does not.
+- **Refresh Boosters** — scans `PlayerStats` again, adds a toggle for anything new and starts watching it. Never duplicates a toggle or a connection.
+- The selection is the profile's `RESET_BOOSTERS` setting: the names switched on. The default is `Boost` and `BoostDrops`, the two the script knew before the section existed, so an existing profile keeps resetting for exactly what it did before. Anything else the game has stays off until you switch it on.
+- A booster is watched even while switched off, and the setting is read when the boost changes — so switching one on takes effect at once, with no rescan.
+- Names are matched as a substring, so a stat that merely contains `boost` is listed too. It is off by default, and switching it off again is permanent for that profile.
 
 ### Profile Settings tab
 

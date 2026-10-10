@@ -87,6 +87,22 @@ return {
             return Result
         end
 
+        --// Names as the game spells them: text entries only, trimmed, blanks
+        --// and duplicates dropped, order kept.
+        local function NormalizeNameList(Value)
+            local Result = {}
+
+            for _, Entry in ipairs(type(Value) == "table" and Value or {}) do
+                local Text = type(Entry) == "string" and Entry:gsub("^%s*(.-)%s*$", "%1") or ""
+
+                if Text ~= "" and not table.find(Result, Text) then
+                    table.insert(Result, Text)
+                end
+            end
+
+            return Result
+        end
+
         --// { Name, UserId } of the party Leader, or {} when none is set.
         local function NormalizePartyLeader(Value)
             if type(Value) ~= "table" or type(Value.Name) ~= "string" or Value.Name == "" then
@@ -195,6 +211,14 @@ return {
             --// Party System Leader, followed between servers with the game's
             --// "tp friend <Name>" chat command. Empty table = no Leader.
             { Key = "PARTY_LEADER", Default = {}, Normalize = NormalizePartyLeader },
+
+            --// Boosters Refill Booster resets the character for, by their
+            --// PlayerStats value name - that is what the toggles in the Booster
+            --// Reset section write. The game owns those names and the section
+            --// scans for them, so anything it finds gets a toggle; this default
+            --// is the two the script knows, and keeps an existing profile
+            --// resetting for exactly what it did before.
+            { Key = "RESET_BOOSTERS", Default = { "Boost", "BoostDrops" }, Normalize = NormalizeNameList },
 
             --// Ores Auto Mining collects, highest priority first, each mined
             --// until the inventory holds Target of it.

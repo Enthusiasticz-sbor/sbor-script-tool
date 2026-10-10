@@ -481,6 +481,11 @@ return {
             if AICUI.RefreshSmithingUI then
                 AICUI.RefreshSmithingUI()
             end
+
+            --// AutoRefill's per-booster toggles follow RESET_BOOSTERS.
+            if AICFeature.RefreshBoosterToggles then
+                AICFeature.RefreshBoosterToggles()
+            end
         end
         function AICUI.updateButton()
             FeatureState.AutoFarm.Enabled = AICFeature.S.Enabled
