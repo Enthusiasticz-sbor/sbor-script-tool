@@ -118,10 +118,14 @@ fastest way to tell a broken setup from a working one:
 2. **Equip your sword** so the tool is inside your character, and stand where mobs
    spawn — the mob pickers can only list mobs the game has loaded near you.
 3. Create a profile in **Profile Settings** (type a name, press **Create New
-   Profile**). Without this, waypoints and zones cannot be saved.
+   Profile**). Without this, waypoints and zones cannot be saved — and, more importantly,
+   **Add Mob Target silently ignores you**: the picker's add is refused with no message at
+   all when no profile is loaded, so an empty Enemy Priority is often this and not a bad
+   mob name.
 4. Farming tab → **Targeting** → **Add Mob Target** → pick the mobs you want (two or
    three is enough). Each pick is added to **Enemy Priority**. The Mob Dictionary's
-   **ADD TO ENEMY PRIORITY** button does the same for anything you look up.
+   **ADD TO ENEMY PRIORITY** button does the same for anything you look up (that path does
+   report `Load or create a profile first` when it refuses).
 5. Optional but recommended: add a **farm zone** (**Add Farm Zone Here**) where you
    want it to fight, and a few **waypoints** (**Add Waypoint Here**) if you want it
    to walk a route first. With no farm zone nothing is restricted; with no waypoints
@@ -516,6 +520,7 @@ clean. If `FARM STATE` is not updating at all:
 | Symptom | Cause | Fix |
 |---|---|---|
 | `IDLE (NO TARGET)` with mobs in sight | Enemy Priority is empty, or does not name those mobs | **Add Mob Target** while standing near them, or Mob Dictionary → **ADD TO ENEMY PRIORITY**. Mobs the game has not loaded yet cannot be picked. |
+| Picked a mob and Enemy Priority stayed empty | No profile is loaded, so the picker's add is refused silently | Create or load a profile, then pick again. This is why the dropdown can appear to do nothing while the Mob Dictionary's button reports the same problem out loud. |
 | `IDLE (NO TARGET)` with a target list filled in | The mobs are outside every farm zone, or inside a deadzone | Farm zones constrain where things may be fought. Delete them, or move the zone, or turn on **Ignore Farm Zone**. |
 | `PATROL` on and off, no fighting | Auto Patrol is looking for targets on its own; the list is still empty | Add targets, as above. |
 | `CHASE …` but it never lands a hit | Engagement range: it closes, then stops to fight | Read the step after `//` in the FARM STATE line; **Close Combat Range** (Safe Combat off) and **Safe Enemy Range** (Safe Combat on) decide how close it stands. |

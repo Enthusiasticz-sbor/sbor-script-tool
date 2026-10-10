@@ -32,8 +32,10 @@ after a later push.
 **Studio** loads the same tree locally: keep `Init` a ModuleScript and it
 `require`s the sibling ModuleScripts in the same folder layout, no HTTP at all.
 
-For what each feature does, what it needs before it will act, and what its status
-line means when nothing happens, see [USAGE.md](USAGE.md).
+For the four steps that make Auto Farm actually attack mobs — and the silent reasons it
+otherwise does nothing — see [QUICKSTART.md](QUICKSTART.md). For what every feature does,
+what it needs before it will act, and what its status line means when nothing happens, see
+[USAGE.md](USAGE.md).
 
 ## Modules in this revision
 
