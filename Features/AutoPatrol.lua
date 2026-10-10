@@ -327,7 +327,9 @@ return {
         
             --// Short natural pauses between patrol destinations.
             if PatrolState.PatrolPauseUntil > now then
-                FaceOrientation.Enabled = false
+                if FaceOrientation then
+                    FaceOrientation.Enabled = false
+                end
                 Humanoid.AutoRotate = true
                 Humanoid:Move(Vector3.zero)
                 return false
@@ -336,7 +338,9 @@ return {
             local Position = AICFeature.GetAutoPatrolPosition()
         
             if not Position then
-                FaceOrientation.Enabled = false
+                if FaceOrientation then
+                    FaceOrientation.Enabled = false
+                end
                 Humanoid.AutoRotate = true
                 Humanoid:Move(Vector3.zero)
                 return false
@@ -359,7 +363,9 @@ return {
         
                     PatrolState.PatrolPauseUntil = now + Low + math.random() * math.max(0, High - Low)
         
-                    FaceOrientation.Enabled = false
+                    if FaceOrientation then
+                        FaceOrientation.Enabled = false
+                    end
                     Humanoid.AutoRotate = true
                     Humanoid:Move(Vector3.zero)
                     return false
@@ -413,7 +419,9 @@ return {
                 PatrolState.PatrolCurveBias = 0
                 PatrolState.PatrolCurveRadius = 0
         
-                FaceOrientation.Enabled = false
+                if FaceOrientation then
+                    FaceOrientation.Enabled = false
+                end
                 Humanoid.AutoRotate = true
                 Humanoid:Move(Vector3.zero)
                 return false
@@ -435,7 +443,9 @@ return {
                 return false
             end
         
-            FaceOrientation.Enabled = false
+            if FaceOrientation then
+                FaceOrientation.Enabled = false
+            end
             Humanoid.AutoRotate = true
         
             --// Switching destinations outright makes the character snap round on the

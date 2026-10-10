@@ -141,7 +141,11 @@ return {
                 return false
             end
         
-            FaceOrientation.Enabled = false
+            --// The facing constraint is nil until AutoFarming makes one and again
+            --// for a frame after every respawn, so setting it is optional.
+            if FaceOrientation then
+                FaceOrientation.Enabled = false
+            end
         
             --// Straight line first, since it is free. If something is in the way,
             --// route around it rather than pressing into the obstacle.
