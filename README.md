@@ -13,7 +13,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Enthusiasticz-sbor/sb
 `Init.lua` then downloads every module from the same repository, so a change
 only reaches an executor once it is pushed to `main` here.
 
-That fetches `UI/Utils.lua` plus the 60 modules in `MODULES` in parallel (62
+That fetches `UI/Utils.lua` plus the 62 modules in `MODULES` in parallel (63
 requests), compiles them, starts them dependency-first, then hands
 `Context.Features` to Heartbeat. It needs an executor (`loadstring`,
 `game:HttpGet`, `LocalPlayer`/`PlayerGui`); `getgenv` only enables the

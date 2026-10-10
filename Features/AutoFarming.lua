@@ -992,6 +992,15 @@ return {
                 self.Button = AICUI.CreateFeature("Auto Farm", AICFeature.S.Enabled, function(Value)
                     AICFeature.S.Enabled = Value
                     FeatureState.AutoFarm.Enabled = Value
+
+                    --// Only a real click on the toggle comes through here
+                    --// (a profile load and FollowerGuard set the flag
+                    --// directly), so this is where FollowerGuard's hold on
+                    --// Auto Farm is lifted.
+                    if AICFeature.NotifyManualAutoFarmToggle then
+                        AICFeature.NotifyManualAutoFarmToggle(Value)
+                    end
+
                     AICProfile.SaveActiveProfile()
                 end)
                 FeatureState.AutoFarm.Button = self.Button

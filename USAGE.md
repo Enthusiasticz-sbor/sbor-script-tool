@@ -1,6 +1,6 @@
 # AIC usage guide
 
-How to use Automated Industry Complex (AutoFarmV3, `v3.22`) once it is loaded. The
+How to use Automated Industry Complex (AutoFarmV3, `v3.23`) once it is loaded. The
 loadstring and what the loader fetches are in [README.md](README.md); this file is
 about the features and about why the farm sometimes appears to do nothing.
 
@@ -435,6 +435,7 @@ This server's live numbers plus leaving it: hop at random, rejoin, or join by Jo
 #### Server Safety
 
 - **Leave On Danger Group** (default off; shared by every profile) — leaves when someone in a Danger Group is in the server. The roster is re-checked every `SCAN_INTERVAL` (2 s), so taking someone off a list is acted on.
+- **Follower Guard** (default on; shared by every profile) — watches who keeps ending up in your servers and **stops Auto Farm** when one player looks like they are following you. A sighting is one player in one server: someone already here when the guard starts, or someone joining while it runs (`present` counts once per player and server, so re-running the script cannot make a bystander look like a follower). At `FOLLOWER_TRIP_SIGHTINGS` (3) sightings of one player inside `FOLLOWER_WINDOW` (30 min) the guard trips: Auto Farm goes off and **stays off until you click the Auto Farm toggle yourself** — a profile load switching it back on is turned straight back off while the hold is up. Clicking Auto Farm on also starts a fresh count, so the old sightings cannot trip it again. You, the Block Whitelist and the Party Leader are never counted. Sightings and the hold are kept in `AutoFarmProfiles/FollowerLog.json` (shared by every profile and place, kept 24 h), so the 30-minute window carries across server hops and re-runs of the script.
 - **Danger Groups** (priority list) — the group IDs that count as dangerous. Ships with `5928691`.
 - **Group ID** (textbox) + **Add Group ID** (button) — validates a numeric ID, rejects duplicates, and clears the box.
 - **Danger Whitelist** (priority list) — UserIds this feature stays for even when their group matches. Separate from the Auto Block whitelist.

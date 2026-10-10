@@ -2,7 +2,7 @@
 
 Status: `[ ]` not started · `[x]` done or fixed (written, not yet verified in-game)
 
-All 97 items are complete — nothing here is pending. This file is the record of
+All 98 items are complete — nothing here is pending. This file is the record of
 what was asked for and what shipped, oldest work first: `## To Do` lists requested
 features, `## To Fix` lists reported bugs. Every item names the version it shipped
 in, and the note under it explains what actually changed and which tuning constants
@@ -388,6 +388,14 @@ were added.
 > - The dictionary from the server does not send the attribute, so it is read from the mob spawned in `workspace.Mobs` (the same way as Drops); only numeric values are accepted
 > - Shown as the stat **AWARD MIN HEALTH %** in the REWARDS group of the detail page (as a bar compared with other mobs), and it appears by itself once the real mob is found
 > - Saved in `AutoFarmProfiles/MobDrops.json` (the `AwardParams` field), so the next run can show it right away without waiting to meet the mob again
+
+### [x] Follower Guard: stop the farm when someone keeps joining your servers
+
+> **Done (v3.23):** new toggle **Follower Guard** (Server tab > Server Safety, on by default, shared by every profile), file `Features/FollowerGuard.lua`
+> - A sighting is one player in one server: already here when the guard looks (`present`, counted once per player and server while the log remembers it, so re-running the script cannot make a bystander look like a follower) or joining while it runs (`joined`; the same player rejoining the same server within `SIGHTING_DEDUPE` (60 s) counts once)
+> - At `FOLLOWER_TRIP_SIGHTINGS` (3) sightings of one player inside `FOLLOWER_WINDOW` (30 min) Auto Farm is turned off and **held off**: a profile load switching it back on is turned straight back off every frame, and only a real click on the Auto Farm toggle lifts the hold (that also restarts the count, so the old sightings cannot trip it again straight away)
+> - You, the Block Whitelist and the Party Leader are never counted
+> - Sightings and the hold are saved in `AutoFarmProfiles/FollowerLog.json` (shared by every profile and place, entries kept `FOLLOWER_KEEP` (24 h)), so the window carries across server hops and re-runs of the script
 
 ## To Fix
 
