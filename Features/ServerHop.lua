@@ -7,8 +7,7 @@
 --   the Auto Block whitelist) is in the server, it blocks them and then
 --   joins another public server (toggle, groups and whitelist are global,
 --   not per profile); Join Alerts for players off the Auto Block whitelist;
---   and the Player Log of who joined and left. Follower Guard leans on the
---   same hop to leave when someone keeps ending up in your servers.
+--   and the Player Log of who joined and left.
 -- ServerUI draws all of it on the Server tab.
 return {
     Name = "ServerHop",
@@ -329,7 +328,7 @@ return {
         --// a hop was started but could not be carried out -- the server list
         --// could not be read, no other server had a free slot, or the
         --// teleport was refused -- so a caller that has to get out of this
-        --// server (Follower Guard) can fall back to stopping the farm.
+        --// server can fall back to stopping the farm.
         --// Returns false when another hop is already on its way: that is
         --// still leaving, for somebody else's reason.
         function ServerHop:Hop(OnFailed)

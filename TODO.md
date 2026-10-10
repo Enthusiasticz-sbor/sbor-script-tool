@@ -406,6 +406,14 @@ were added.
 > - The same player seen again is left for again, but not before `FOLLOWER_RETRIP_COOLDOWN` (60 s), because the sightings that tripped it are still inside the window — so a follower who follows us to the next server is left there too, and one trip cannot turn into a hop per sighting
 > - The old hold is kept as the fallback: when no hop could be carried out (no other server with a free slot, an unreadable server list, or a refused teleport) Auto Farm goes off and stays off until the Auto Farm toggle is clicked, exactly as in v3.23
 
+### [x] Follower Guard: leave the game instead of hopping servers
+
+> **Done (v3.25):** a trip now kicks you out of the game rather than joining another server
+> - The trip calls `Player:Kick`, which disconnects the client to the Roblox app and ends the run, so the follower is left behind for good instead of possibly meeting us again in the next public server
+> - The Server Hop path is gone from the guard: `Features/FollowerGuard.lua` no longer depends on `ServerHop`, and `ServerHop:Hop`'s optional `OnFailed` reason has no caller left (it stays part of `ServerHop:Hop` for a future caller)
+> - The old hold is kept as the fallback: if the kick itself fails, Auto Farm goes off and stays off until the Auto Farm toggle is clicked
+> - `FOLLOWER_RETRIP_COOLDOWN` (60 s) now only matters after a trip whose kick failed and fell back to the hold
+
 ## To Fix
 
 ### [x] Waypoints Looped & Paired Farmzone/Waypoint/Targets: walking back to waypoints that are not paired

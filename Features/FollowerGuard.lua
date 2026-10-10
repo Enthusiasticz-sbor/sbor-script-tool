@@ -1,14 +1,13 @@
 -- FollowerGuard notices someone who keeps ending up in your server and gets
--- the run out of there before a stranger watches a bot farm: the same player
+-- you out of the game before a stranger watches a bot farm: the same player
 -- seen in your servers again and again inside FOLLOWER_WINDOW is following
--- you, and on a trip ServerHop joins another public server, leaving them
--- behind with the farm still running. Only when that cannot happen -- no
--- other server, the server list could not be read, the teleport was refused
--- -- does the old hold come back: Auto Farm goes off and stays off. Only a
--- real click on the Auto Farm toggle turns it back on -- a profile load sets
--- the flag directly and is never obeyed while the hold is on -- and turning
--- it on by hand also moves the count's start, so the same old sightings
--- cannot trip it straight away.
+-- you, and on a trip the local player is kicked, which disconnects the client
+-- to the Roblox app and ends the run. Only when the kick itself fails does the
+-- old hold come back: Auto Farm goes off and stays off. Only a real click on
+-- the Auto Farm toggle turns it back on -- a profile load sets the flag
+-- directly and is never obeyed while the hold is on -- and turning it on by
+-- hand also moves the count's start, so the same old sightings cannot trip it
+-- straight away.
 --
 --   Sighting    one player in one server: someone already here when the
 --               guard starts ("present"), or someone joining while it runs
@@ -16,21 +15,22 @@
 --               as long as the log remembers it, so re-running the script in
 --               the same server cannot make a bystander look like a follower.
 --   Trip        FOLLOWER_TRIP_SIGHTINGS sightings of one player inside the
---               window. A trip leaves the server; the same player seen again
---               FOLLOWER_RETRIP_COOLDOWN later is left for again, so someone
---               who follows us to the next server is left there too.
+--               window. A trip kicks you out of the game, which ends the run;
+--               the same player seen again FOLLOWER_RETRIP_COOLDOWN later is
+--               only reached after a trip whose kick failed and fell back to
+--               the hold.
 --   Exempt      you, the Block Whitelist and the Party Leader -- those are
 --               people who are meant to be around you (the Leader is even
 --               followed on purpose).
 --
 -- Sightings and the hold live in FOLLOWER_FILE, shared by every profile and
--- PlaceId like MobDrops.json, so the window carries across server hops and
--- re-runs of the script. The player is never blocked or reported: the guard
--- only leaves.
+-- PlaceId like MobDrops.json, so the window carries across re-runs of the
+-- script. The player is never blocked or reported: the guard only gets you
+-- out of the game.
 return {
     Name = "FollowerGuard",
     IsFeature = true,
-    Dependencies = {"Runtime", "SaveConfig", "Components", "ProfileManager", "AutoBlock", "ServerHop"},
+    Dependencies = {"Runtime", "SaveConfig", "Components", "ProfileManager", "AutoBlock"},
 
     Start = function(Context)
         local Services = Context.Services
@@ -42,7 +42,6 @@ return {
         local AICFeature = Context.AICFeature
         local AICUI = Context.AICUI
         local AICProfile = Context.AICProfile
-        local ServerHop = Context.ServerHop
         local NotifyAction = Context.NotifyAction
         local UIRef = Context.UIRef
 
@@ -52,8 +51,8 @@ return {
         local FOLLOWER_TRIP_SIGHTINGS = 2
         --// One player is left for once per this: the sightings that tripped
         --// it are still inside the window, so seen again straight away is
-        --// the same trip, not a new one. Someone who really followed us to
-        --// the next server is left there too once this has passed.
+        --// the same trip, not a new one. Only reached after a trip whose
+        --// kick failed and fell back to the hold.
         local FOLLOWER_RETRIP_COOLDOWN = 60
         --// The same player arriving in the same server again within this is
         --// one arrival seen twice (script re-run, replication hiccup), not
@@ -75,7 +74,7 @@ return {
                 Sightings = {},
                 --// Auto Farm was stopped for a follower and is held off
                 --// until someone turns it on by hand. Only set when the
-                --// guard could not leave the server for them.
+                --// guard could not kick us out of the game for them.
                 Latched = false,
                 LatchedAt = 0,
                 LatchedBy = {},
@@ -253,7 +252,7 @@ return {
             end
         end
 
-        --// The guard could not get us out of the server: fall back to the
+        --// The guard could not get us out of the game: fall back to the
         --// hold, so a follower is never farmed in front of. This notice is
         --// never cooled down like the trip's: it arrives right after it, and
         --// it is the one that says the farm has stopped.
@@ -267,7 +266,7 @@ return {
             NotifyAction(
                 "FOLLOWER GUARD",
                 string.format(
-                    "@%s is following you and this server could not be left (%s) - Auto Farm is off until you turn it on",
+                    "@%s is following you and the game could not be left (%s) - Auto Farm is off until you turn it on",
                     OtherPlayer.Name,
                     Reason or "unavailable"
                 ),
@@ -275,33 +274,46 @@ return {
             )
         end
 
+        --// Leaves the game outright: kicking the local player disconnects the
+        --// client to the Roblox app, which ends the run with it. It is the one
+        --// thing that always gets us away from a follower. True when the kick
+        --// was accepted; the error comes back when it was not.
+        local function LeaveGame()
+            local Success, Error = pcall(function()
+                Player:Kick("Follower Guard: someone keeps joining your servers")
+            end)
+
+            return Success, Error
+        end
+
         local function Trip(OtherPlayer, Count, Now)
             --// Nothing to save here: a trip that leaves changes no field of
-            --// the log, and one that cannot leave saves through HoldInstead.
+            --// the log, and one whose kick failed saves through HoldInstead.
             S.Tripped[tostring(OtherPlayer.UserId)] = Now
-
-            --// The trip's job is to get us out of this server rather than to
-            --// stop the farm: ServerHop joins another public server and the
-            --// farm carries on there. Only a hop that was started and then
-            --// failed falls back to the hold; a false return means another
-            --// hop is already on its way, which is leaving all the same.
-            local Leaving = ServerHop:Hop(function(Reason)
-                HoldInstead(OtherPlayer, Reason)
-            end)
 
             if Now - S.NoticeAt >= 8 then
                 S.NoticeAt = Now
                 NotifyAction(
                     "FOLLOWER GUARD",
                     string.format(
-                        "@%s has joined your servers %d times in %d minutes - %s",
+                        "@%s has joined your servers %d times in %d minutes - leaving the game",
                         OtherPlayer.Name,
                         Count,
-                        FOLLOWER_WINDOW / 60,
-                        Leaving and "leaving this server" or "a hop is already on its way"
+                        FOLLOWER_WINDOW / 60
                     ),
                     8
                 )
+            end
+
+            --// The trip's job is to get us out of the game rather than merely
+            --// to stop the farm, and a kick is what does it: the client
+            --// disconnects and the run goes with it. Only a kick that could
+            --// not be carried out falls back to the hold, so a follower is
+            --// never farmed in front of.
+            local Left, Error = LeaveGame()
+
+            if not Left then
+                HoldInstead(OtherPlayer, "kick failed: " .. tostring(Error))
             end
         end
 
@@ -389,7 +401,7 @@ return {
         --// straight and never come through here. This is the one way the hold
         --// is lifted, and with it the era changes so older sightings are
         --// never able to trip the guard again. It also clears every trip, so
-        --// turning the farm back on by hand is never answered with a hop for
+        --// turning the farm back on by hand is never answered with a kick for
         --// a player the guard has already left for.
         AICFeature.NotifyManualAutoFarmToggle = function(Value)
             if not Value then
@@ -444,7 +456,7 @@ return {
         end, UIRef.ServerSafetySection)
 
         if UIRef.ServerSafetySection then
-            UIRef.ServerSafetySection:AddLabel("Leaves the server when one player keeps joining yours")
+            UIRef.ServerSafetySection:AddLabel("Kicks you out of the game when one player keeps joining yours")
         end
 
         return FollowerGuard
