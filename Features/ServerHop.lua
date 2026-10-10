@@ -7,7 +7,8 @@
 --   the Auto Block whitelist) is in the server, it blocks them and then
 --   joins another public server (toggle, groups and whitelist are global,
 --   not per profile); Join Alerts for players off the Auto Block whitelist;
---   and the Player Log of who joined and left.
+--   and the Player Log of who joined and left. Follower Guard leans on the
+--   same hop to leave when someone keeps ending up in your servers.
 -- ServerUI draws all of it on the Server tab.
 return {
     Name = "ServerHop",
@@ -200,7 +201,7 @@ return {
         --// Teleports
         ------------------------------------------------------------------------
 
-        local function TeleportToInstance(JobId, Status)
+        local function TeleportToInstance(JobId, Status, OnFailed)
             if S.Teleporting then
                 return false
             end
@@ -217,6 +218,10 @@ return {
                     S.Teleporting = false
                     SetStatus("TELEPORT FAILED")
                     Notify("SERVER", tostring(Error), 6)
+
+                    if OnFailed then
+                        OnFailed(tostring(Error))
+                    end
                 end
             end)
 
@@ -320,7 +325,14 @@ return {
             return nil, nil
         end
 
-        function ServerHop:Hop()
+        --// Finds another public server and joins it. OnFailed is called when
+        --// a hop was started but could not be carried out -- the server list
+        --// could not be read, no other server had a free slot, or the
+        --// teleport was refused -- so a caller that has to get out of this
+        --// server (Follower Guard) can fall back to stopping the farm.
+        --// Returns false when another hop is already on its way: that is
+        --// still leaving, for somebody else's reason.
+        function ServerHop:Hop(OnFailed)
             --// A second press while one is finding or teleporting does nothing.
             if S.Teleporting or S.Finding then
                 return false
@@ -336,13 +348,21 @@ return {
 
                 if Target then
                     Notify("SERVER HOP", "Joining another public server...")
-                    TeleportToInstance(Target, "HOPPING")
+                    TeleportToInstance(Target, "HOPPING", OnFailed)
                 elseif Error then
                     SetStatus("HOP FAILED")
                     Notify("SERVER HOP", "Could not read the server list: " .. tostring(Error), 6)
+
+                    if OnFailed then
+                        OnFailed(tostring(Error))
+                    end
                 else
                     SetStatus("NO OTHER SERVER")
                     Notify("SERVER HOP", "No other public server with a free slot was found", 6)
+
+                    if OnFailed then
+                        OnFailed("no other server with a free slot")
+                    end
                 end
             end)
 

@@ -2,7 +2,7 @@
 
 Status: `[ ]` not started · `[x]` done or fixed (written, not yet verified in-game)
 
-All 98 items are complete — nothing here is pending. This file is the record of
+All 99 items are complete — nothing here is pending. This file is the record of
 what was asked for and what shipped, oldest work first: `## To Do` lists requested
 features, `## To Fix` lists reported bugs. Every item names the version it shipped
 in, and the note under it explains what actually changed and which tuning constants
@@ -396,6 +396,15 @@ were added.
 > - At `FOLLOWER_TRIP_SIGHTINGS` (3) sightings of one player inside `FOLLOWER_WINDOW` (30 min) Auto Farm is turned off and **held off**: a profile load switching it back on is turned straight back off every frame, and only a real click on the Auto Farm toggle lifts the hold (that also restarts the count, so the old sightings cannot trip it again straight away)
 > - You, the Block Whitelist and the Party Leader are never counted
 > - Sightings and the hold are saved in `AutoFarmProfiles/FollowerLog.json` (shared by every profile and place, entries kept `FOLLOWER_KEEP` (24 h)), so the window carries across server hops and re-runs of the script
+
+### [x] Follower Guard: leave the server instead of stopping the farm
+
+> **Done (v3.24):** a trip now gets the run out of the server instead of switching Auto Farm off
+> - `FOLLOWER_TRIP_SIGHTINGS` is **2** (was 3), so the second sighting of one player inside `FOLLOWER_WINDOW` (30 min) trips the guard
+> - A trip calls ServerHop's own hop (`ServerHop:Hop`), so the farm keeps running in the next public server; `ServerHop:Hop` gained an optional `OnFailed` reason, which the guard uses to know the hop could not be carried out
+> - The player is **not** blocked and is not reported: the guard only leaves
+> - The same player seen again is left for again, but not before `FOLLOWER_RETRIP_COOLDOWN` (60 s), because the sightings that tripped it are still inside the window — so a follower who follows us to the next server is left there too, and one trip cannot turn into a hop per sighting
+> - The old hold is kept as the fallback: when no hop could be carried out (no other server with a free slot, an unreadable server list, or a refused teleport) Auto Farm goes off and stays off until the Auto Farm toggle is clicked, exactly as in v3.23
 
 ## To Fix
 

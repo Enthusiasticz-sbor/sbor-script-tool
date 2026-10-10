@@ -44,7 +44,8 @@ return {
             --// and notify about players off the whitelist.
             { Name = "DangerGroupHop",    Default = false, Key = "r", Global = true },
             { Name = "JoinAlerts",        Default = false, Key = "s" },
-            --// Stops Auto Farm when one player keeps joining your servers
+            --// Leaves for another server when one player keeps joining
+            --// yours, and stops Auto Farm only when it cannot leave
             --// (FollowerGuard). Its sightings and hold live in the shared
             --// FollowerLog.json, so it watches across profiles and places.
             { Name = "FollowerGuard",     Default = true,  Key = "y", Global = true },

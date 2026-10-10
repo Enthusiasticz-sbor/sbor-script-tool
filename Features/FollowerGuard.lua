@@ -1,10 +1,14 @@
--- FollowerGuard notices someone who keeps ending up in your server and stops
--- the farm before a stranger watches a bot run: the same player seen in your
--- servers again and again inside FOLLOWER_WINDOW is following you, and on a
--- trip Auto Farm goes off and stays off. Only a real click on the Auto Farm
--- toggle turns it back on -- a profile load sets the flag directly and is
--- never obeyed while the hold is on -- and turning it on by hand also moves
--- the count's start, so the same old sightings cannot trip it straight away.
+-- FollowerGuard notices someone who keeps ending up in your server and gets
+-- the run out of there before a stranger watches a bot farm: the same player
+-- seen in your servers again and again inside FOLLOWER_WINDOW is following
+-- you, and on a trip ServerHop joins another public server, leaving them
+-- behind with the farm still running. Only when that cannot happen -- no
+-- other server, the server list could not be read, the teleport was refused
+-- -- does the old hold come back: Auto Farm goes off and stays off. Only a
+-- real click on the Auto Farm toggle turns it back on -- a profile load sets
+-- the flag directly and is never obeyed while the hold is on -- and turning
+-- it on by hand also moves the count's start, so the same old sightings
+-- cannot trip it straight away.
 --
 --   Sighting    one player in one server: someone already here when the
 --               guard starts ("present"), or someone joining while it runs
@@ -12,18 +16,21 @@
 --               as long as the log remembers it, so re-running the script in
 --               the same server cannot make a bystander look like a follower.
 --   Trip        FOLLOWER_TRIP_SIGHTINGS sightings of one player inside the
---               window.
+--               window. A trip leaves the server; the same player seen again
+--               FOLLOWER_RETRIP_COOLDOWN later is left for again, so someone
+--               who follows us to the next server is left there too.
 --   Exempt      you, the Block Whitelist and the Party Leader -- those are
 --               people who are meant to be around you (the Leader is even
 --               followed on purpose).
 --
 -- Sightings and the hold live in FOLLOWER_FILE, shared by every profile and
 -- PlaceId like MobDrops.json, so the window carries across server hops and
--- re-runs of the script.
+-- re-runs of the script. The player is never blocked or reported: the guard
+-- only leaves.
 return {
     Name = "FollowerGuard",
     IsFeature = true,
-    Dependencies = {"Runtime", "SaveConfig", "Components", "ProfileManager", "AutoBlock"},
+    Dependencies = {"Runtime", "SaveConfig", "Components", "ProfileManager", "AutoBlock", "ServerHop"},
 
     Start = function(Context)
         local Services = Context.Services
@@ -35,13 +42,19 @@ return {
         local AICFeature = Context.AICFeature
         local AICUI = Context.AICUI
         local AICProfile = Context.AICProfile
+        local ServerHop = Context.ServerHop
         local NotifyAction = Context.NotifyAction
         local UIRef = Context.UIRef
 
         --// How far back sightings still count as "following you".
         local FOLLOWER_WINDOW = 30 * 60
         --// Sightings of one player inside the window that trip the guard.
-        local FOLLOWER_TRIP_SIGHTINGS = 3
+        local FOLLOWER_TRIP_SIGHTINGS = 2
+        --// One player is left for once per this: the sightings that tripped
+        --// it are still inside the window, so seen again straight away is
+        --// the same trip, not a new one. Someone who really followed us to
+        --// the next server is left there too once this has passed.
+        local FOLLOWER_RETRIP_COOLDOWN = 60
         --// The same player arriving in the same server again within this is
         --// one arrival seen twice (script re-run, replication hiccup), not
         --// two. Only "joined" sightings are deduped by it: "present" is
@@ -61,15 +74,16 @@ return {
                 --// { UserId, Name, Time, JobId, Kind } oldest first.
                 Sightings = {},
                 --// Auto Farm was stopped for a follower and is held off
-                --// until someone turns it on by hand.
+                --// until someone turns it on by hand. Only set when the
+                --// guard could not leave the server for them.
                 Latched = false,
                 LatchedAt = 0,
                 LatchedBy = {},
                 --// Sightings from before this never trip again; moved to
                 --// "now" when Auto Farm is turned on by hand.
                 CountFrom = 0,
-                --// UserId -> true once it tripped this era, so its later
-                --// sightings do not repeat the notice.
+                --// UserId -> os.time() of its last trip, so the sightings
+                --// that tripped the guard cannot trip it again at once.
                 Tripped = {},
                 --// The roster is scanned once the profile (and with it the
                 --// whitelist) is loaded, not before.
@@ -228,36 +242,63 @@ return {
             return Count
         end
 
-        local function Trip(OtherPlayer, Count, Now)
-            local UserId = tostring(OtherPlayer.UserId)
-
-            if S.Tripped[UserId] then
-                return
-            end
-
-            S.Tripped[UserId] = true
-            S.Latched = true
-            S.LatchedAt = Now
-            S.LatchedBy = { UserId = UserId, Name = OtherPlayer.Name }
-            QueueLog()
-
-            --// The trip is what stops the farm; SaveActiveProfile follows it
-            --// so the profile on disk says off too.
+        --// Turns Auto Farm off now instead of waiting for the next frame,
+        --// and saves the profile so what is on disk says off too. Update
+        --// keeps it off for as long as the hold is set.
+        local function StopFarm()
             if AICFeature.S.Enabled then
                 AICFeature.S.Enabled = false
                 AICUI.updateButton()
                 AICProfile.SaveActiveProfile()
             end
+        end
+
+        --// The guard could not get us out of the server: fall back to the
+        --// hold, so a follower is never farmed in front of. This notice is
+        --// never cooled down like the trip's: it arrives right after it, and
+        --// it is the one that says the farm has stopped.
+        local function HoldInstead(OtherPlayer, Reason)
+            S.Latched = true
+            S.LatchedAt = os.time()
+            S.LatchedBy = { UserId = tostring(OtherPlayer.UserId), Name = OtherPlayer.Name }
+            QueueLog()
+            StopFarm()
+
+            NotifyAction(
+                "FOLLOWER GUARD",
+                string.format(
+                    "@%s is following you and this server could not be left (%s) - Auto Farm is off until you turn it on",
+                    OtherPlayer.Name,
+                    Reason or "unavailable"
+                ),
+                8
+            )
+        end
+
+        local function Trip(OtherPlayer, Count, Now)
+            --// Nothing to save here: a trip that leaves changes no field of
+            --// the log, and one that cannot leave saves through HoldInstead.
+            S.Tripped[tostring(OtherPlayer.UserId)] = Now
+
+            --// The trip's job is to get us out of this server rather than to
+            --// stop the farm: ServerHop joins another public server and the
+            --// farm carries on there. Only a hop that was started and then
+            --// failed falls back to the hold; a false return means another
+            --// hop is already on its way, which is leaving all the same.
+            local Leaving = ServerHop:Hop(function(Reason)
+                HoldInstead(OtherPlayer, Reason)
+            end)
 
             if Now - S.NoticeAt >= 8 then
                 S.NoticeAt = Now
                 NotifyAction(
                     "FOLLOWER GUARD",
                     string.format(
-                        "@%s has joined your servers %d times in %d minutes - Auto Farm is off until you turn it on",
+                        "@%s has joined your servers %d times in %d minutes - %s",
                         OtherPlayer.Name,
                         Count,
-                        FOLLOWER_WINDOW / 60
+                        FOLLOWER_WINDOW / 60,
+                        Leaving and "leaving this server" or "a hop is already on its way"
                     ),
                     8
                 )
@@ -265,11 +306,21 @@ return {
         end
 
         local function Evaluate(OtherPlayer, Now)
-            if not Feature.FollowerGuard.Enabled or S.Latched or S.Tripped[tostring(OtherPlayer.UserId)] then
+            if not Feature.FollowerGuard.Enabled then
                 return
             end
 
-            local Count = CountSightings(tostring(OtherPlayer.UserId), Now)
+            local UserId = tostring(OtherPlayer.UserId)
+            local LastTrip = S.Tripped[UserId]
+
+            --// Left for them recently: the sightings that tripped it are
+            --// still inside the window, so seeing them again now is the same
+            --// trip. They are left for again once the cooldown has passed.
+            if LastTrip and Now - LastTrip < FOLLOWER_RETRIP_COOLDOWN then
+                return
+            end
+
+            local Count = CountSightings(UserId, Now)
 
             if Count >= FOLLOWER_TRIP_SIGHTINGS then
                 Trip(OtherPlayer, Count, Now)
@@ -337,7 +388,9 @@ return {
         --// on a real click: profiles and this guard set AICFeature.S.Enabled
         --// straight and never come through here. This is the one way the hold
         --// is lifted, and with it the era changes so older sightings are
-        --// never able to trip the guard again.
+        --// never able to trip the guard again. It also clears every trip, so
+        --// turning the farm back on by hand is never answered with a hop for
+        --// a player the guard has already left for.
         AICFeature.NotifyManualAutoFarmToggle = function(Value)
             if not Value then
                 return
@@ -372,10 +425,9 @@ return {
             --// The hold is enforced every frame and outlives the toggle:
             --// whatever sets Auto Farm on (a profile load does) is turned
             --// back off until someone clicks the Auto Farm toggle itself.
+            --// Reached only when a trip could not leave the server.
             if S.Latched and AICFeature.S.Enabled then
-                AICFeature.S.Enabled = false
-                AICUI.updateButton()
-                AICProfile.SaveActiveProfile()
+                StopFarm()
             end
 
             if S.SaveQueued then
@@ -392,7 +444,7 @@ return {
         end, UIRef.ServerSafetySection)
 
         if UIRef.ServerSafetySection then
-            UIRef.ServerSafetySection:AddLabel("Stops Auto Farm when one player keeps joining your servers")
+            UIRef.ServerSafetySection:AddLabel("Leaves the server when one player keeps joining yours")
         end
 
         return FollowerGuard

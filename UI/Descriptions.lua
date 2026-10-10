@@ -33,7 +33,7 @@ return {
             ["Auto Smithing"] = "Crafts the Recipe Priority recipes at a smithing table",
             ["Leave On Danger Group"] = "Blocks, then leaves when a Danger Group member joins",
             ["Join Alerts"] = "Notifies you when someone off the Block Whitelist joins",
-            ["Follower Guard"] = "Stops Auto Farm when one player keeps joining your servers, until you turn it back on",
+            ["Follower Guard"] = "Leaves for another server when one player keeps joining yours",
             ["Show Pinned Items"] = "Shows the floating Pinned Items panel",
 
             --// Debug Visualizer
