@@ -658,7 +658,9 @@ return {
         AICFeature.S.WaypointWaitUntil = nil
         AICFeature.S.Enabled = true
         AICFeature.S.Equipped = false
-        AICUI.S.TargetCurrency = "Golden Shell"
+        --// The inventory item the Status tab's event currency readout counts,
+        --// under the name the game gives it. The event changes it.
+        AICUI.S.TargetCurrency = "Fallen Camellia"
         AICUI.S.LastInventory = nil
         AICUI.S.EventCurrency = 0
         

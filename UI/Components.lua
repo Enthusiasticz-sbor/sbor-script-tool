@@ -654,12 +654,23 @@ return {
         
             return ItemName, 0
         end
+        --// The event currency readout: how much of the currency this event
+        --// hands out the player holds, under the name the game gives it
+        --// (AICUI.S.TargetCurrency is the inventory item counted).
+        function AICUI.FormatEventCurrency(Amount)
+            return string.upper(AICUI.S.TargetCurrency) .. "  " .. tostring(Amount)
+        end
+        function AICUI.SetEventCurrencyLabel(Amount)
+            if UIRef.EventCurrencyLabel then
+                UIRef.EventCurrencyLabel.Text = AICUI.FormatEventCurrency(Amount)
+            end
+        end
         function AICUI.updateEventCurrency()
             local PlayerStats = Player:FindFirstChild("PlayerStats")
         
             if not PlayerStats then
                 AICUI.S.EventCurrency = 0
-                UIRef.EventCurrencyLabel.Text = "EVENT CURRENCY  0"
+                AICUI.SetEventCurrencyLabel(0)
                 UIRef.ExpLabel.Text = "EXP            0/0"
                 AICUI.S.LastInventory = nil
                 return
@@ -678,7 +689,7 @@ return {
         
             if not Inventory then
                 AICUI.S.EventCurrency = 0
-                UIRef.EventCurrencyLabel.Text = "EVENT CURRENCY  0"
+                AICUI.SetEventCurrencyLabel(0)
                 return
             end
         
@@ -693,9 +704,7 @@ return {
             local _, Amount = AICUI.GetItem(InventoryValue, AICUI.S.TargetCurrency)
         
             AICUI.S.EventCurrency = Amount
-            if UIRef.EventCurrencyLabel then
-                UIRef.EventCurrencyLabel.Text = "EVENT CURRENCY  " .. tostring(AICUI.S.EventCurrency)
-            end
+            AICUI.SetEventCurrencyLabel(AICUI.S.EventCurrency)
         end
         function AICUI.updatePlayTime()
             local ServerAge = math.floor(workspace.DistributedGameTime)

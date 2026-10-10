@@ -971,7 +971,7 @@ return {
                 --// closes in; with nothing in face range, face the way we run.
                 AICCombat.FaceWhileRetreating(NearestThreat, RetreatDirection)
         
-                AICCombatUtils.DoJumpIfObstacle(RetreatPosition)
+                AICCombatUtils.DoCombatJumpIfObstacle(RetreatPosition)
                 return true
             end
         
@@ -1010,7 +1010,7 @@ return {
                     Humanoid:MoveTo(RawTarget)
                     AICCombat.FaceWhileRetreating(NearestThreat, RawTarget - RootPart.Position)
 
-                    AICCombatUtils.DoJumpIfObstacle(RawTarget)
+                    AICCombatUtils.DoCombatJumpIfObstacle(RawTarget)
                     return true
                 end
             else
@@ -1350,7 +1350,7 @@ return {
                     and (AICCombatUtils.IsJumpableObstacleAhead(Waypoint.Position)
                         or (AICCombatUtils.IsStuck() and not IsAgainstTargetBody(Goblin)))
                 then
-                    AICCombatUtils.DoJump()
+                    AICCombatUtils.DoCombatJump()
                 end
 
                 --// Hung on a corner between two path points: the path is
@@ -1358,7 +1358,7 @@ return {
                 --// Not when the "corner" is the target itself: the hop lands
                 --// on top of it.
                 if AICCombatUtils.IsStuck() and not IsAgainstTargetBody(Goblin) then
-                    AICCombatUtils.DoJump()
+                    AICCombatUtils.DoCombatJump()
                 end
 
                 Humanoid.AutoRotate = false
@@ -1490,7 +1490,7 @@ return {
             Humanoid.AutoRotate = false
             Humanoid:MoveTo(Destination)
             AICCombat.FaceGoblin(Goblin)
-            AICCombatUtils.DoJumpIfObstacle(Destination)
+            AICCombatUtils.DoCombatJumpIfObstacle(Destination)
         end
 
         --// Sidesteps are only worth repeating while they lead somewhere. Once
@@ -1580,7 +1580,7 @@ return {
                 Humanoid.AutoRotate = false
                 Humanoid:MoveTo(AICCombat.S.ChaseUnstickPosition)
                 AICCombat.FaceGoblin(Goblin)
-                AICCombatUtils.DoJumpIfObstacle(AICCombat.S.ChaseUnstickPosition)
+                AICCombatUtils.DoCombatJumpIfObstacle(AICCombat.S.ChaseUnstickPosition)
                 AICCombat.S.ChaseMoveStep = "UNSTICK"
                 return true
             end
@@ -1604,7 +1604,7 @@ return {
                         return AICCombat.ChaseMoveTo(Goblin, Destination)
                     end
 
-                    AICCombatUtils.DoJump()
+                    AICCombatUtils.DoCombatJump()
                 else
                     AICCombatUtils.ResetStuckTracker()
                 end
@@ -1735,7 +1735,7 @@ return {
                 --// refuse the water, so this is a straight line.
                 AICCombat.S.SwimOrder = nil
                 Humanoid:MoveTo(MobRoot.Position)
-                AICCombatUtils.DoJumpIfObstacle(MobRoot.Position)
+                AICCombatUtils.DoCombatJumpIfObstacle(MobRoot.Position)
                 return true
             end
 
@@ -2364,6 +2364,8 @@ return {
                     --// The pathfinder marks jumps generously, including on flat ground.
                     --// Only take them when something is actually in the way, or when the
                     --// character has stopped making progress.
+                    --// Returning to the farm zone is its own walk, not a fight:
+                    --// Jump While Fighting does not touch this one.
                     if Waypoint.Action == Enum.PathWaypointAction.Jump
                         and (AICCombatUtils.IsJumpableObstacleAhead(Waypoint.Position) or AICCombatUtils.IsStuck())
                     then

@@ -228,6 +228,34 @@ return {
                 Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
             end
         end
+
+        --// Jump While Fighting. Off, nothing that moves the character towards,
+        --// away from or around a target leaves the ground: mobs and other
+        --// bodies crowding in were read as low terrain, which hopped the
+        --// character at the fight every frame. The waypoint route (route holes
+        --// and ticked waypoints), Waypoint Loop, patrol, mining and smithing
+        --// jumps are their own and keep working.
+        function AICCombatUtils.IsCombatJumpingEnabled()
+            local State = FeatureState.JumpWhileFighting
+            return State == nil or State.Enabled == true
+        end
+
+        function AICCombatUtils.DoCombatJump()
+            if not AICCombatUtils.IsCombatJumpingEnabled() then
+                return false
+            end
+
+            AICCombatUtils.DoJump()
+            return true
+        end
+
+        function AICCombatUtils.DoCombatJumpIfObstacle(TargetPosition)
+            if not AICCombatUtils.IsCombatJumpingEnabled() then
+                return false
+            end
+
+            return AICCombatUtils.DoJumpIfObstacle(TargetPosition)
+        end
         
         ------------------------------------------------------------------------
         --// AICWorld  ::  zones, water, ground, line of sight, path clearance
@@ -622,6 +650,26 @@ return {
         --//
         --// Also treats ground that steps up sharply just ahead as jumpable, since a
         --// short ledge can sit below the low probe.
+        --//
+        --// A hit on a character is not terrain. A mob standing beside the
+        --// character reads as a low ledge with clear space above it, which made
+        --// it hop at the crowd it was fighting; the folder check below misses
+        --// any mob kept outside `workspace.Mobs`. Walking the hit's ancestors
+        --// for a Humanoid covers every character, wherever the game stores it.
+        local function IsCharacterHit(Hit)
+            local Part = Hit and Hit.Instance
+
+            while Part and Part ~= workspace do
+                if Part:FindFirstChildOfClass("Humanoid") then
+                    return true
+                end
+
+                Part = Part.Parent
+            end
+
+            return false
+        end
+
         function AICCombatUtils.IsJumpableObstacleAhead(TargetPosition)
             local Character, Humanoid, RootPart = Runtime:GetCharacter()
             if not RootPart or not TargetPosition then
@@ -665,7 +713,16 @@ return {
         
             local LowHit = workspace:Raycast(LowOrigin, Direction, Params)
             local HighHit = workspace:Raycast(HighOrigin, Direction, Params)
-        
+
+            --// A character in the way is not something to jump over.
+            if IsCharacterHit(LowHit) then
+                LowHit = nil
+            end
+
+            if IsCharacterHit(HighHit) then
+                HighHit = nil
+            end
+
             if LowHit and not HighHit then
                 return true
             end
@@ -684,10 +741,11 @@ return {
                 Params
             )
         
-            if not Down then
+            --// Ground is what can be stood on; the top of a mob is not a step.
+            if not Down or IsCharacterHit(Down) then
                 return false
             end
-        
+
             local StepUp = Down.Position.Y - Feet.Y
         
             return StepUp >= (tonumber(CONFIG.JUMP_STEP_HEIGHT) or 1.2)

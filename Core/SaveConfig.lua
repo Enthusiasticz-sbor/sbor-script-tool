@@ -56,6 +56,11 @@ return {
             --// Turns off shadows, effects and particles for frames (FpsBoost).
             --// Shared by every profile: it is about the machine, not the farm.
             { Name = "FpsBoost",          Default = false, Key = "w", Global = true },
+            --// Jump over something in the way while chasing a target (the
+            --// DoCombatJump* helpers in CombatUtils). Off, the character keeps
+            --// its feet on the ground for the whole fight; the waypoint route,
+            --// patrol, mining and smithing jumps are their own.
+            { Name = "JumpWhileFighting", Default = false, Key = "x" },
             { Name = "DebugWaypoints",    Default = true },
             { Name = "DebugFarmZones",    Default = true },
             { Name = "DebugDeadzones",    Default = true },

@@ -59,6 +59,7 @@ This revision explicitly separates the feature modules requested:
 - AutoSkill.lua
 - AutoFind.lua
 - SafeCombat.lua
+- JumpWhileFighting.lua (Jump While Fighting: no jumping while chasing a target)
 - ResetStats.lua
 - DebugVisualizer.lua
 - Waypoints.lua

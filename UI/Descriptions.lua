@@ -14,6 +14,7 @@ return {
             ["Auto Confirm Block"] = "Presses Block in Roblox's block dialog for you (executor only)",
             ["Whitelist Skips Safety"] = "Block Whitelist players never make you leave a server",
             ["Safe Combat"] = "Fights from outside enemy weapon reach; off fights up close",
+            ["Jump While Fighting"] = "Jumps over something in the way while chasing a target; off keeps it on the ground in a fight",
             ["Auto Find"] = "Skips the waypoint route and goes straight for targets",
             ["Ignore Farm Zone"] = "Fights and mines anywhere, not only inside farm zones",
             ["Auto Patrol"] = "Walks around the farm zone looking for targets when none are near",

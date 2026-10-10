@@ -888,7 +888,8 @@ return {
 
             --// Jump. A waypoint sitting higher is not a reason on its own: a ramp
             --// climbs fine on foot, and hopping up one only costs speed. Probe for
-            --// something actually in the way instead.
+            --// something actually in the way instead. This is the waypoint route
+            --// walking, so Jump While Fighting leaves it alone.
             if PlaceConfig and not FeatureState.AutoFind.Enabled and target then
                 AICCombatUtils.DoJumpIfObstacle(target)
             end
@@ -1023,7 +1024,8 @@ return {
             UIRef.PlaceIDLabel = UIRef.StatusSection:AddLabel("PLACE ID       " .. tostring(game.PlaceId))
             UIRef.WalkSpeedLabel = UIRef.StatusSection:AddLabel("WALKSPEED      0")
             UIRef.WayPointLabel = UIRef.StatusSection:AddLabel("WAYPOINTS:  0/" .. ((Runtime:GetPlaceConfig() and #Runtime:GetPlaceConfig().WAYPOINTS) or 0))
-            UIRef.EventCurrencyLabel = UIRef.StatusSection:AddLabel("EVENT CURRENCY  0")
+            --// Named after the currency the game is handing out this event.
+            UIRef.EventCurrencyLabel = UIRef.StatusSection:AddLabel(AICUI.FormatEventCurrency(0))
             UIRef.ServerAgeLabel = UIRef.StatusSection:AddLabel("PLAY TIME      00:00:00")
             UIRef.PositionLabel = UIRef.StatusSection:AddLabel("POSITION       --")
             UIRef.DeathLabel = UIRef.StatusSection:AddLabel("DEATH          0")

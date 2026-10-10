@@ -2,7 +2,7 @@
 
 Status: `[ ]` not started · `[x]` done or fixed (written, not yet verified in-game)
 
-All 94 items are complete — nothing here is pending. This file is the record of
+All 97 items are complete — nothing here is pending. This file is the record of
 what was asked for and what shipped, oldest work first: `## To Do` lists requested
 features, `## To Fix` lists reported bugs. Every item names the version it shipped
 in, and the note under it explains what actually changed and which tuning constants
@@ -845,3 +845,25 @@ were added.
 > - The Danger side (**Leave On Danger Group**, **Danger Groups**, **Danger Whitelist**) has already been global since before, so nothing needed changing
 > - Existing values are migrated automatically the first time: Block Whitelist = the names from every profile of the PlaceId open at that moment (deduplicated), Whitelist Skips Safety = the value of the profile used most recently
 > - Profiles of other PlaceIds are not merged (the migration runs once, from the first PlaceId opened), so names kept elsewhere must be added by hand
+
+### [x] Refill Booster: pick which boosters reset the character
+
+> **Cause:** the watcher was written with the two booster names it knew (`Boost`, `BoostDrops`), so any other booster the game runs was never watched and nothing said so.
+> **Done (v3.22):** the **Booster Reset** section of the Farming tab scans `PlayerStats` for every value whose name contains `boost` and gives each one its own toggle, behind a `BOOSTERS  <name> ON/off` readout and a **Refresh Boosters** button.
+> - The selection is the profile setting `RESET_BOOSTERS`, defaulting to `Boost` + `BoostDrops`, so an existing profile resets for exactly what it did before.
+> - Every discovered booster is watched and the selection is read when a boost changes, not when the connection was made: switching one on or off takes effect with no rescan, and refreshing duplicates neither a toggle nor a connection.
+> - The scan waits for `PlayerStats` to exist, so a character that joins later is covered.
+
+### [x] Status: the event currency is called Fallen Camellia now
+
+> **Fixed (v3.22):** the readout counted one hard-coded inventory item (`Golden Shell`)
+> - `AICUI.S.TargetCurrency` (`Core/Runtime.lua`) is now `"Fallen Camellia"`.
+> - The Status line is named after that currency instead of the fixed `EVENT CURRENCY` label, so it reads `FALLEN CAMELLIA  1,204` and follows the name from that one place (`AICUI.FormatEventCurrency`).
+
+### [x] Combat: the character jumps constantly while fighting mobs
+
+> **Cause:** two probes at the character's feet decided whether to jump, and a mob standing beside it read exactly like a low ledge with clear space above it, so it hopped at the crowd it was fighting on every frame. The probe's own filter only dropped characters under `workspace.Mobs`, so any mob kept elsewhere was read as terrain. On top of that, bodies pressing in made the character look stuck, and the chase answered being stuck with a hop.
+> **Fixed (v3.22):**
+> - New toggle **Jump While Fighting** (Farming tab, saved in the profile, default **off**). Off, nothing that moves the character towards, away from or around a target leaves the ground: the chase (`ChaseMoveTo` / path follow), its sidestep and stuck recovery, the retreat and the swim chase all go through `CombatUtils.DoCombatJump` / `DoCombatJumpIfObstacle`.
+> - The waypoint route (route holes and ticked Jump waypoints), Waypoint Loop, patrol, mining and smithing keep their own jumps, and so does the return-to-zone walker: a parkour gap is still cleared on the route with the toggle off.
+> - `CombatUtils.IsJumpableObstacleAhead` no longer reads a character as terrain: each raycast hit is checked by walking its ancestors for a `Humanoid`, so a mob or a player is never a ledge to hop over nor a step to climb, whatever folder the game keeps it in.

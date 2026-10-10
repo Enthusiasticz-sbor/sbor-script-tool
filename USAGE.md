@@ -1,6 +1,6 @@
 # AIC usage guide
 
-How to use Automated Industry Complex (AutoFarmV3, `v3.21`) once it is loaded. The
+How to use Automated Industry Complex (AutoFarmV3, `v3.22`) once it is loaded. The
 loadstring and what the loader fetches are in [README.md](README.md); this file is
 about the features and about why the farm sometimes appears to do nothing.
 
@@ -158,6 +158,7 @@ versions; each one writes its saved value straight away.
 - **Auto Block** (on) — blocks players who are not on the Block Whitelist, then leaves the server. Delayed by **Block Delay (s)**; without Auto Confirm Block it needs you to press Block.
 - **Auto Confirm Block** (off) — presses Block in Roblox's block dialog for you. Executor only (it reads CoreGui), works with Auto Block.
 - **Safe Combat** (on) — fights from outside enemy weapon reach, backing off and circling. Off, it fights up close at the distance in **Close Combat Range**.
+- **Jump While Fighting** (off) — jumps over something actually in the way while chasing a target. Off, the character keeps its feet on the ground for the whole fight: a crowd of mobs pressed against it used to read as low terrain, which hopped it at the fight on every frame. The waypoint route (route holes and ticked waypoints), Waypoint Loop, patrol, mining and smithing make their own jumps and are not affected.
 - **Auto Find** (off) — ignores the waypoint route and goes straight for targets; needs a target list to find anything.
 - **Ignore Farm Zone** (off) — fights and mines anywhere instead of only inside farm zones; it also ignores the zone's Zone Targets rule.
 - **Auto Patrol** (off) — walks around the farm zone looking for targets when none are near. Needs at least one farm zone, otherwise there is nowhere to patrol.
@@ -475,7 +476,7 @@ Taking a quest by ID, and finding its objectives in the world.
 A read-only window on what the farm is doing, plus two buttons.
 
 - **FARM STATE  --** (readout) — what the farm loop did this frame.
-- **PLACE ID**, **WALKSPEED**, **WAYPOINTS:  n / m**, **EVENT CURRENCY**, **PLAY TIME**, **POSITION**, **DEATH**, **EXP** (readouts) — the current place, walk speed, route progress, event currency, time on the server, position, death count and experience.
+- **PLACE ID**, **WALKSPEED**, **WAYPOINTS:  n / m**, **FALLEN CAMELLIA**, **PLAY TIME**, **POSITION**, **DEATH**, **EXP** (readouts) — the current place, walk speed, route progress, the event currency, time on the server, position, death count and experience. The event currency line is named after the currency this event hands out and counts the inventory item of that name (`AICUI.S.TargetCurrency` in `Core/Runtime.lua`), so it is renamed when the event's currency changes.
 - **Reset Stats** (button) — fires `StatsEvent` with 0 for Vitality, Agility, Luck, Strength and Defense. A stat at or above `STAT_RESET_THRESHOLD` (500) is refused with a notice, so allocated points are not wiped by accident.
 - **Show Pinned Items** (toggle) — shows the floating Pinned Items panel, which is the only way back after its × closes it. Panel contents, open/closed state and position live in the global `PinnedItems.json`.
 - **Reset Pinned Items Position** (button) — docks the panel back on the right.
@@ -551,6 +552,20 @@ fighting, mining or crafting until `WAYPOINTS` reaches the end. So:
 - `WAYPOINT WAIT` is that row's `Wait (s)` doing its job — set it back to 0.
 - A route copied from a place preset will not fit a different place: presets exist
   only for two PlaceIds, and anything you record is per profile **and** per place.
+
+### It jumps constantly while fighting
+
+The character hops over whatever the jump probe reads as a low ledge — and a mob
+standing beside or in front of it reads exactly like one.
+
+- **Jump While Fighting** on the Farming tab is the switch: off, nothing that moves
+the character towards, away from or around a target leaves the ground. The waypoint
+route, Waypoint Loop, patrol, mining and smithing keep their own jumps, which is why
+the route still clears a parkour gap with the toggle off.
+- A mob or a player in the probe's way is no longer read as terrain at all, whatever
+folder the game keeps its mobs in, so a crowd is walked through instead of hopped
+over.
+- Turning it on restores the old behaviour, hops included.
 
 ### Mining and crafting
 
