@@ -478,7 +478,7 @@ A read-only window on what the farm is doing, plus two buttons.
 
 - **FARM STATE  --** (readout) — what the farm loop did this frame.
 - **PLACE ID**, **WALKSPEED**, **WAYPOINTS:  n / m**, **FALLEN CAMELLIA**, **PLAY TIME**, **POSITION**, **DEATH**, **EXP** (readouts) — the current place, walk speed, route progress, the event currency, time on the server, position, death count and experience. The event currency line is named after the currency this event hands out and counts the inventory item of that name (`AICUI.S.TargetCurrency` in `Core/Runtime.lua`), so it is renamed when the event's currency changes.
-- **Reset Stats** (button) — fires `StatsEvent` with 0 for Vitality, Agility, Luck, Strength and Defense. A stat at or above `STAT_RESET_THRESHOLD` (500) is refused with a notice, so allocated points are not wiped by accident.
+- **Reset Stats** (button) — fires `StatsEvent` with 0 for Vitality, Agility, Luck, Strength and Defense. A stat above `STAT_RESET_THRESHOLD` (500, so 501+) is refused with a notice, so allocated points are not wiped by accident; a stat of exactly 500 resets like any other.
 - **Show Pinned Items** (toggle) — shows the floating Pinned Items panel, which is the only way back after its × closes it. Panel contents, open/closed state and position live in the global `PinnedItems.json`.
 - **Reset Pinned Items Position** (button) — docks the panel back on the right.
 
