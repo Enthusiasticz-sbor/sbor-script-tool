@@ -34,7 +34,7 @@ return {
                             if not StatValue then
                                 continue
                             end
-                            if StatValue.Value <= CONFIG.STAT_RESET_THRESHOLD then
+                            if StatValue.Value < CONFIG.STAT_RESET_THRESHOLD then
                                 StatsEvent:FireServer(StatName, 0)
                             else
                                 NotifyAction("RESET STATS", `Cannot reset "{StatName}" exceeded {CONFIG.STAT_RESET_THRESHOLD}.`)
