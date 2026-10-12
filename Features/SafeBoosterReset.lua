@@ -10,6 +10,7 @@ return {
 		local FeatureState = Context.Feature
 		local AICFeature = Context.AICFeature
 		local AICUI = Context.AICUI
+		local UIRef = Context.UIRef
 		local NotifyAction = Context.NotifyAction
 
 		local Feature = {
@@ -64,7 +65,7 @@ return {
 
 		--// The value is saved through Feature.SafeBoosterReset.Enabled like
 		--// every other toggle and restored on load by updateFeatureButtons.
-		AICUI.BindFeatureToggle("SafeBoosterReset", "Safe Booster Reset")
+		AICUI.BindFeatureToggle("SafeBoosterReset", "Safe Booster Reset", nil, UIRef.BoosterSection)
 		Feature.SafeBoosterReset()
 
 		return Feature

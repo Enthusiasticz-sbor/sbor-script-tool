@@ -102,7 +102,11 @@ return {
         UIRef.TeleportTab = UI:AddTab("Teleport")
         UIRef.QuestTab = UI:AddTab("Quest")
         UIRef.DebugTab = UI:AddTab("Debug")
-        UIRef.FeatureSection = UIRef.FarmTab:AddSection("Features")
+        UIRef.UtilityTab = UI:AddTab("Utility")
+        UIRef.UtilitySection = UIRef.UtilityTab:AddSection("Utilities")
+        UIRef.FeatureSection = UIRef.FarmTab:AddSection("Core")
+        UIRef.CoreSection = UIRef.FeatureSection
+        UIRef.CombatSection = UIRef.FarmTab:AddSection("Combat")
         UIRef.TargetSection = UIRef.FarmTab:AddSection("Targeting")
         UIRef.BlockSection = UIRef.FarmTab:AddSection("Auto Block")
         UIRef.GatherSection = UIRef.FarmTab:AddSection("Mob Gather")

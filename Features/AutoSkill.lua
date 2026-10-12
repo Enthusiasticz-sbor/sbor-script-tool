@@ -5,6 +5,7 @@ return {
 
     Start = function(Context)
         local AICUI = Context.AICUI
+        local UIRef = Context.UIRef
 
         local Feature = {
             Name = "AutoSkill",
@@ -15,7 +16,7 @@ return {
         end
 
         --// Read by PerformCombatActions through Feature.AutoSkill.Enabled.
-        AICUI.BindFeatureToggle("AutoSkill", "Auto Skill")
+        AICUI.BindFeatureToggle("AutoSkill", "Auto Skill", nil, UIRef.CombatSection)
 
         return Feature
     end,

@@ -7,6 +7,7 @@ return {
         local AICFeature = Context.AICFeature
         local AICCombat = Context.AICCombat
         local AICUI = Context.AICUI
+        local UIRef = Context.UIRef
 
         local Feature = {
             Name = "AutoFind",
@@ -24,7 +25,7 @@ return {
             AICCombat.ResetTargetReposition()
             AICCombat.UpdateValidMobs()
             AICCombat.S.ClosestTarget = AICCombat.AcquireCombatTarget(os.clock())
-        end)
+        end, UIRef.CoreSection)
 
         return Feature
     end,

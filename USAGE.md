@@ -139,37 +139,35 @@ the code with that exact label; defaults and ranges come from the profile schema
 
 ### Farming tab
 
-The Farming tab is where the farm loop is switched on and told what to fight: the feature
-toggles at the top of the tab, then the Targeting, Auto Block, Mob Gather and Booster Reset
-sections. Every toggle here is saved in the active profile unless it is marked global.
+The Farming tab is where the farm loop is switched on and told what to fight, split into
+Core, Combat, Targeting, Auto Block, Mob Gather and Booster Reset sections. Every toggle here
+is saved in the active profile unless it is marked global.
 
-#### Features
+#### Core
 
-The toggles appear in the order their modules start, so the exact order can differ between
-versions; each one writes its saved value straight away.
+The main switch and the ways the farm decides where to go. The toggles appear in the order their
+modules start, so the exact order can differ between versions; each one writes its saved value
+straight away.
 
 - **Auto Farm** (default on) — the main loop. Useful only once the Targeting section has at least one entry, or the farm zone the character is in has Zone Targets; with none it stands still on `IDLE (NO TARGET)`.
-- **Auto Block** (on) — blocks players who are not on the Block Whitelist, then leaves the server. Delayed by **Block Delay (s)**; without Auto Confirm Block it needs you to press Block.
-- **Auto Confirm Block** (off) — presses Block in Roblox's block dialog for you. Executor only (it reads CoreGui), works with Auto Block.
-- **Safe Combat** (on) — fights from outside enemy weapon reach, backing off and circling. Off, it fights up close at the distance in **Close Combat Range**.
-- **Jump While Fighting** (off) — jumps over something actually in the way while chasing a target. Off, the character keeps its feet on the ground for the whole fight: a crowd of mobs pressed against it used to read as low terrain, which hopped it at the fight on every frame. The waypoint route (route holes and ticked waypoints), Waypoint Loop, patrol, mining and smithing make their own jumps and are not affected.
 - **Auto Find** (off) — ignores the waypoint route and goes straight for targets; needs a target list to find anything.
-- **Ignore Farm Zone** (off) — fights and mines anywhere instead of only inside farm zones; it also ignores the zone's Zone Targets rule.
 - **Auto Patrol** (off) — walks around the farm zone looking for targets when none are near. Needs at least one farm zone, otherwise there is nowhere to patrol.
 - **Return To Farm Zone** (on) — walks back inside the farm zone after leaving it, or after the route ends outside it. Needs farm zones.
-- **Auto Skill** (on) — uses the weapon skill on the target when it is off cooldown.
-- **Gather Mobs** (off) — pulls a pack of mobs together and hits them with the skill. Pace it with **Min Mobs**, **Max Mobs** and **Gather Radius** in the Mob Gather section below. Runs inside the Auto Farm loop, so it does nothing with Auto Farm off.
-- **Refill Booster** (on) — resets the character when a booster runs out, so the game refills it. Which boosters count is chosen in the Booster Reset section below. Saved under the `ResetOnBoostOut` key, so older profiles keep working.
-- **Safe Booster Reset** (off) — makes Refill Booster wait until no mob is hitting you before resetting.
-- **Auto Start Game** (off, global) — clicks through the title screen into the game. Shared by every profile: it runs before a profile has been loaded.
-- **FPS Boost** (off, global) — turns off shadows, post effects, particles, lights and water waves for frames. Shared by every profile; it is about the machine, not the farm.
-- **Debug Visualizer** (on) — master switch for the world overlays; the individual debug toggles are on the Debug tab.
+- **Ignore Farm Zone** (off) — fights and mines anywhere instead of only inside farm zones; it also ignores the zone's Zone Targets rule.
 
-The same section ends with three sliders that belong to the combat loop:
+The Core section ends with three sliders that belong to the combat loop:
 
 - **Execute Charge at HP%** (default 0, range 0–90) — below this much health a target is finished off instead of retreated from. 0 disables it, and an incoming enemy skill still overrides it.
 - **Retreat At HP%** (40, 0–80) — retreat below this share of health. 0 means never retreat, not even on the frame health reaches 0.
 - **Auto Heal at HP%** (65, 30–80) — drinks the last used potion at or below this share.
+
+#### Combat
+
+How the character fights once Auto Farm has a target. Auto Block has its own section below.
+
+- **Safe Combat** (on) — fights from outside enemy weapon reach, backing off and circling. Off, it fights up close at the distance in **Close Combat Range**.
+- **Jump While Fighting** (off) — jumps over something actually in the way while chasing a target. Off, the character keeps its feet on the ground for the whole fight: a crowd of mobs pressed against it used to read as low terrain, which hopped it at the fight on every frame. The waypoint route (route holes and ticked waypoints), Waypoint Loop, patrol, mining and smithing make their own jumps and are not affected.
+- **Auto Skill** (on) — uses the weapon skill on the target when it is off cooldown.
 
 Auto Mining, Auto Smithing, Leave On Danger Group and Join Alerts also exist as toggles, but on
 the Mining, Crafting and Server tabs respectively; the Party System toggle is on the Party tab.
@@ -196,8 +194,11 @@ while the character is inside it, so the same mobs can be fought in a different 
 
 #### Auto Block
 
-Handles players who are not on the whitelist, and the list itself. The whitelist and Whitelist
-Skips Safety are shared by every profile and every place, unlike the rest of this tab.
+Handles players who are not on the whitelist, and the list itself. **Auto Block** (on) blocks
+strangers and leaves the server, delayed by **Block Delay (s)**; **Auto Confirm Block** (off)
+presses Block in Roblox's block dialog for you so it needs no manual press — executor only, since
+it reads CoreGui. The whitelist and Whitelist Skips Safety are shared by every profile and every
+place, unlike the rest of this tab.
 
 - **Block Delay (s)** (0, 0–120) — how long a stranger may stay before being blocked and the server left. 0 acts at once; each player's delay starts when they are first seen.
 - **Whitelist Skips Safety** (on, global) — players on the Block Whitelist never make Auto Block or Leave On Danger Group leave the server, even if already blocked.
@@ -211,9 +212,10 @@ Skips Safety are shared by every profile and every place, unlike the rest of thi
 
 #### Mob Gather
 
-Gather Mobs turns the pull-and-skill pack routine on; these three controls say what counts as a
-pack and how big it may get. It runs inside the farm loop after the waypoint route, so Auto Farm
-must be on, and it fights on its own while it works, which skips the normal combat for that frame.
+**Gather Mobs** (off) turns the pull-and-skill pack routine on; these three controls say what
+counts as a pack and how big it may get. It runs inside the farm loop after the waypoint route,
+so Auto Farm must be on, and it fights on its own while it works, which skips the normal combat
+for that frame.
 
 - **Min Mobs** (3, 2–8) — fewest mobs that make gathering worth starting, all of them within Gather Radius of each other.
 - **Max Mobs** (5, 2–10) — most mobs pulled into one pack before the skill is used.
@@ -221,10 +223,12 @@ must be on, and it fights on its own while it works, which skips the normal comb
 
 #### Booster Reset
 
-Which boosters **Refill Booster** resets the character for. The boosters are the game's, so the
-section finds them itself: every value under `PlayerStats` whose name contains `boost` gets a
-toggle of its own, rather than the script deciding in advance how many kinds there are. Names it
-has never seen are listed and start switched off.
+**Refill Booster** (on) resets the character when a booster runs out, so the game refills it.
+Saved under the `ResetOnBoostOut` key, so older profiles keep working. **Safe Booster Reset**
+(off) makes it wait until no mob is hitting you before resetting. Which boosters count is chosen
+here: the boosters are the game's, so the section finds them itself — every value under
+`PlayerStats` whose name contains `boost` gets a toggle of its own, rather than the script deciding
+in advance how many kinds there are. Names it has never seen are listed and start switched off.
 
 - **BOOSTERS** (readout) — every booster found, each marked `ON` or `off`. `none found yet` while `PlayerStats` does not exist; the scan waits for the game to create it, and **Refresh Boosters** looks again on demand.
 - One toggle per booster, labelled with the game's own name — **ON** means that booster running out resets the character, so one kind of boost can refill while another does not.
@@ -478,9 +482,10 @@ A read-only window on what the farm is doing, plus two buttons.
 
 ### Debug tab
 
-World-space drawing for the zones, routes and targets the farm uses. Everything here is saved per profile.
-
-- **Debug Visualizer** (default on, in the Features section) — master switch; off removes the debug folder from the workspace.
+World-space drawing for the zones, routes and targets the farm uses. Everything here is saved per
+profile. **Debug Visualizer** (default on) is the master switch — off removes the debug folder from
+the workspace and nothing below draws; the toggles below it pick which overlays appear while it is
+on.
 - **Debug Waypoints** (default on) — waypoint markers and the route.
 - **Debug Farm Zones** (default on) — farm zone circles.
 - **Debug Deadzones** (default on) — deadzone circles.
@@ -488,6 +493,14 @@ World-space drawing for the zones, routes and targets the farm uses. Everything 
 - **Debug Ore Status** (default on) — a label per ore with what Auto Mining thinks of it. Fed by Auto Mining, so it needs that feature running to update.
 - **Debug Smithing Tables** (default on) — a label per smithing table with its state. Fed by Auto Smithing the same way.
 - **Radius Billboard Labels** (default on) — each zone's number and radius over it.
+
+### Utility tab
+
+Two global switches that are about the client rather than the farm loop. Both are shared by every
+profile and PlaceId, so they are not part of a profile export.
+
+- **Auto Start Game** (off, global) — clicks through the title screen into the game. Shared by every profile: it runs before a profile has been loaded.
+- **FPS Boost** (off, global) — turns off shadows, post effects, particles, lights and water waves for frames. Shared by every profile; it is about the machine, not the farm.
 
 ### Configuration panel
 

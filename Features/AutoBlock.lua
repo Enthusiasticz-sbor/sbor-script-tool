@@ -257,11 +257,10 @@ return {
         end
 
         function AutoBlock:CreateUI()
-            local FeatureSection = UIRef.FeatureSection
             local BlockSection = UIRef.BlockSection
 
-            if FeatureSection and FeatureSection.AddToggle then
-                self.Button = FeatureSection:AddToggle(
+            if BlockSection then
+                self.Button = BlockSection:AddToggle(
                     "Auto Block",
                     self.Enabled,
                     function(Value)

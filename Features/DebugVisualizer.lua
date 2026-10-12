@@ -697,8 +697,8 @@ return {
         local Runtime = {}
         --// Called by Init after AutoFarming's sliders, matching AFV2's order.
         function Module:BuildLateUI()
-            if UIRef.FeatureSection then
-                FeatureState.DebugVisualizer.Button = UIRef.FeatureSection:AddToggle(
+            if UIRef.DebugSection then
+                FeatureState.DebugVisualizer.Button = UIRef.DebugSection:AddToggle(
                     "Debug Visualizer",
                     FeatureState.DebugVisualizer.Enabled,
                     function(Value)

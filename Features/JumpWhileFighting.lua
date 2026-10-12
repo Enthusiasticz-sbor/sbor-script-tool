@@ -6,6 +6,7 @@ return {
     Start = function(Context)
         local AICCombatUtils = Context.AICCombatUtils
         local AICUI = Context.AICUI
+        local UIRef = Context.UIRef
 
         local Feature = {
             Name = "JumpWhileFighting",
@@ -23,7 +24,7 @@ return {
             --// Whatever the chase was doing, decide again from here rather than
             --// finishing a hop the toggle has just turned off.
             AICCombatUtils.ResetStuckTracker()
-        end)
+        end, UIRef.CombatSection)
 
         return Feature
     end,

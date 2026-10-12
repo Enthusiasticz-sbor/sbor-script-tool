@@ -6,6 +6,7 @@ return {
     Start = function(Context)
         local AICCombat = Context.AICCombat
         local AICUI = Context.AICUI
+        local UIRef = Context.UIRef
 
         local Feature = {
             Name = "SafeCombat",
@@ -18,7 +19,7 @@ return {
         AICUI.BindFeatureToggle("SafeCombat", "Safe Combat", function(Enabled)
             AICCombat.S.SafeCombatPositionEnabled = Enabled
             AICCombat.ResetTargetReposition()
-        end)
+        end, UIRef.CombatSection)
 
         return Feature
     end,

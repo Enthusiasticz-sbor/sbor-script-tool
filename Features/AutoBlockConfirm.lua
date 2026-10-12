@@ -13,6 +13,7 @@ return {
         local FeatureState = Context.Feature
         local AICFeature = Context.AICFeature
         local AICUI = Context.AICUI
+        local UIRef = Context.UIRef
         local NotifyAction = Context.NotifyAction
 
         --// How long to look for the dialog after a prompt.
@@ -312,7 +313,7 @@ return {
             if not Enabled then
                 Feature:Disarm()
             end
-        end)
+        end, UIRef.BlockSection)
 
         return Feature
     end,

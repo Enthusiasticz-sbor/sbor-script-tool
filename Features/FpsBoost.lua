@@ -11,6 +11,7 @@ return {
         local FeatureState = Context.Feature
         local AICUI = Context.AICUI
         local AICCombatUtils = Context.AICCombatUtils
+        local UIRef = Context.UIRef
         local Lighting = game:GetService("Lighting")
 
         --// Lighting is set again this often, for games that change it.
@@ -221,7 +222,7 @@ return {
             else
                 Feature.Disable()
             end
-        end)
+        end, UIRef.UtilitySection)
 
         --// It is a global toggle, already read before this module starts.
         if FeatureState.FpsBoost.Enabled then

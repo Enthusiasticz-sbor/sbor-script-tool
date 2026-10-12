@@ -20,6 +20,7 @@ return {
         local Player = Context.Player
         local FeatureState = Context.Feature
         local AICUI = Context.AICUI
+        local UIRef = Context.UIRef
         local NotifyAction = Context.NotifyAction
 
         local GuiService = game:GetService("GuiService")
@@ -975,7 +976,7 @@ return {
             if not Enabled then
                 Feature:Stop()
             end
-        end)
+        end, UIRef.UtilitySection)
 
         --// Ends the title-screen loop.
         Context.Lifetime.OnEnd(function()

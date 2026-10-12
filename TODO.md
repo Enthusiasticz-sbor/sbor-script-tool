@@ -428,6 +428,16 @@ were added.
 > - The on-screen refusal (`Features/ResetStats.lua`) now says the points trip the game anticheat, instead of the old wording that implied it was refused only to avoid wiping points by accident
 > - `STAT_RESET_THRESHOLD` is unchanged at 500; only the wording changed. `USAGE.md` was corrected to match
 
+### [x] UI: organize the Farming tab instead of one Features list
+
+> **Done (v3.30):** the Farming tab no longer dumps every toggle into one "Features" section; it is split by what the feature does
+> - `Core/Runtime.lua` keeps declaring every section in one place; the former `Features` section is now titled **Core** (kept as `UIRef.FeatureSection`, aliased to `UIRef.CoreSection`), and the Farming tab reads **Core → Combat → Targeting → Auto Block → Mob Gather → Booster Reset**
+> - Core holds Auto Farm, Auto Find, Auto Patrol, Return To Farm Zone, Ignore Farm Zone and the combat HP% sliders; Combat holds Safe Combat, Jump While Fighting and Auto Skill
+> - The **Auto Block** and **Auto Confirm Block** toggles moved out of Core into the **Auto Block** section with their own settings; **Gather Mobs** into **Mob Gather**; **Refill Booster** and **Safe Booster Reset** into **Booster Reset**
+> - **Auto Start Game** and **FPS Boost** moved to a new **Utility** tab (`UIRef.UtilitySection`), and the **Debug Visualizer** master toggle to the **Debug** tab with its other toggles
+> - Each feature now passes its section to `BindFeatureToggle` (4th arg) instead of relying on the default, so a new toggle lands with its own settings rather than in Core; no toggle, default, or save key changed
+> - `USAGE.md` and `AI-WALKTHROUGH.md` document the section-per-area layout and the rule to always pass the matching section
+
 ## To Fix
 
 ### [x] Waypoints Looped & Paired Farmzone/Waypoint/Targets: walking back to waypoints that are not paired

@@ -225,7 +225,7 @@ return {
             --// Calling it from here would add connections on every Heartbeat.
         end
 
-        AICUI.BindFeatureToggle(FEATURE_NAME, "Refill Booster")
+        AICUI.BindFeatureToggle(FEATURE_NAME, "Refill Booster", nil, Section)
 
         if Section then
             UIRef.BoosterStatusLabel = Section:AddLabel("BOOSTERS  none found yet")
