@@ -1,7 +1,7 @@
 -- AutoFarm bootstrap.
 -- Every module returns {Name, Dependencies, Start(Context)}.
 
-local TITLE = "AUTOMATED INDUSTRY COMPLEX v3.27"
+local TITLE = "AUTOMATED INDUSTRY COMPLEX v3.28"
 local UTILS_PATH = "UI/Utils.lua"
 
 --// A failed download is retried this many times before giving up.
@@ -37,7 +37,7 @@ end
 
 local BASE = BaseOverride
     or (
-        "https://raw.githubusercontent.com/Enthusiasticz-sbor/sbor-script-tool/refs/heads/"
+        "https://raw.githubusercontent.com/Enthusiasticzz/Autofarm-Script-Sbor/refs/heads/"
         .. BRANCH
         .. "/"
     )

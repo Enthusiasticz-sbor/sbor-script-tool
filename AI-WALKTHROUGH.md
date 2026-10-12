@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 A Roblox auto-farm script ("Automated Industry Complex", aka AutoFarmV3) written in Luau. It has no build, lint or test tooling. Nothing can be run locally: the code only runs inside a Roblox client, so every change is "done but not tested in-game" until the user checks it (`TODO.md` uses `[x]` with that same meaning).
 
 It runs in two ways (`Init.lua`):
-- **Remote (executor):** `Init.lua` downloads every file in parallel from `raw.githubusercontent.com/Enthusiasticz-sbor/sbor-script-tool/refs/heads/main/` (or from `getgenv().AICBaseURL` when it is set) and `loadstring`s it. **Pushing to `main` ships the change to users.** Runtime reads the same override for the `UI/Utils.lua` it falls back to.
+- **Remote (executor):** `Init.lua` downloads every file in parallel from `raw.githubusercontent.com/Enthusiasticzz/Autofarm-Script-Sbor/refs/heads/main/` (or from `getgenv().AICBaseURL` when it is set) and `loadstring`s it. **Pushing to `main` ships the change to users.** Runtime reads the same override for the `UI/Utils.lua` it falls back to.
 - **Local (Studio):** when `Init` is a ModuleScript, it `require`s sibling ModuleScripts in folders that mirror the repo layout.
 
 ## Module system
@@ -73,6 +73,15 @@ When adding code:
 - Connections a module keeps and rebinds itself (per-mob or per-folder watchers on `S`) stay plain `:Connect`; add a `Context.Lifetime.OnEnd` that calls `Context.Lifetime.Disconnect(...)` on them.
 - Loops that never end on their own check `Context.Lifetime.Alive`. Anything created outside the window (in workspace) gets an `OnEnd` that destroys it.
 
+## Committing and pushing
+
+**Always commit and push every change to this repository.** When a task is done,
+stage the changes, commit them with a conventional-commit subject (`feat:` /
+`fix:` / `docs:` / `chore:`), and push to `origin` on `main`. The download base in
+`Init.lua` and `Core/Runtime.lua` points at this repository, so an unpushed change
+never reaches the game: committing is part of finishing the task, not a separate
+step to wait to be asked for. Commit and push without being prompted.
+
 ## Release conventions
 
 Every shipped change bumps the version:
@@ -82,4 +91,4 @@ Every shipped change bumps the version:
 
 Tuning values are named UPPER_SNAKE constants near the top of the file that uses them (e.g. `RETREAT_FACE_HOLD`, `SWIM_FACE_MAX_PITCH`).
 
-Note: README mentions a `Legacy/` folder, but it is not in the repo.
+Note: there is no `Legacy/` folder in the repo.

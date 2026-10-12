@@ -7,3 +7,6 @@ Thumbs.db
 desktop.ini
 *.swp
 *~
+
+# Local editor/tool marker, not part of the tree.
+.freebuff/

@@ -1,84 +1,83 @@
-# AutoFarmV3 refactor
+# Automated Industry Complex
 
-## How to run
+A Roblox auto-farm script written in Luau. It plays the game for you — fights
+mobs on your target list, walks your route, mines ore, smiths recipes, and
+handles the small stuff like re-filling boosters and staying un-AFK.
 
-`Init.lua` is the only file loaded by hand. Every other file is a module spec
-(`{ Name, Dependencies, Start }`) that `Init.lua` downloads and `loadstring`s
-itself, so pointing an executor at a single feature file does nothing.
+You only load one file; everything else is pulled from this repo automatically.
+
+## Run it
 
 ```lua
-loadstring(game:HttpGet("https://raw.githubusercontent.com/Enthusiasticz-sbor/sbor-script-tool/refs/heads/main/Init.lua"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Enthusiasticzz/Autofarm-Script-Sbor/refs/heads/main/Init.lua"))()
 ```
 
-`Init.lua` then downloads every module from the same repository, so a change
-only reaches an executor once it is pushed to `main` here.
+`Init.lua` is the only file you load by hand. It downloads every module from
+this repository and `loadstring`s it, so **a change only reaches the game once
+it is pushed to `main` here** — and pointing an executor at a single feature
+file does nothing.
 
-That fetches `UI/Utils.lua` plus the 62 modules in `MODULES` in parallel (63
-requests), compiles them, starts them dependency-first, then hands
-`Context.Features` to Heartbeat. It needs an executor (`loadstring`,
-`game:HttpGet`, `LocalPlayer`/`PlayerGui`); `getgenv` only enables the
-re-execution guard, so Studio uses the local path instead.
+Behind the scenes it fetches `UI/Utils.lua` plus the 62 modules in `MODULES`
+(63 requests), compiles them, and starts them in dependency order. It needs an
+executor (`loadstring`, `game:HttpGet`, `LocalPlayer`/`PlayerGui`).
 
-- **The download base** is `BASE` at the top of `Init.lua`, defaulting to
-  `Enthusiasticz-sbor/sbor-script-tool`, branch `main`. Set
-  `getgenv().AICBaseURL` before loading to run from a fork or a pinned build
-  instead; `Core/Runtime.lua` reads the same override for the `UI/Utils.lua` it
-  fetches when something other than `Init.lua` starts Runtime.
-- **Pin a version** by replacing `main` with a commit SHA
-  (`.../<user>/<repo>/<sha>/Init.lua`), so an exact build can be re-run even
-after a later push.
-- **Running it twice** stops the previous run (`getgenv().AICSession`). A build
-  from before that guard cannot be stopped and asks for a rejoin instead.
-- A module that fails to fetch or compile shows `LOAD FAILED  //  ...` on the
-  loading window and raises the error.
+**Roblox Studio:** keep `Init` as a ModuleScript and it `require`s the sibling
+modules locally — no HTTP at all.
 
-**Studio** loads the same tree locally: keep `Init` a ModuleScript and it
-`require`s the sibling ModuleScripts in the same folder layout, no HTTP at all.
+### Options
 
-For the four steps that make Auto Farm actually attack mobs — and the silent reasons it
-otherwise does nothing — see [QUICKSTART.md](QUICKSTART.md). For what every feature does,
-what it needs before it will act, and what its status line means when nothing happens, see
-[USAGE.md](USAGE.md).
+- **Run from a fork or a pinned build.** The download base is `BASE` at the top
+  of `Init.lua`. Set `getgenv().AICBaseURL` before loading to point it somewhere
+  else; `Core/Runtime.lua` reads the same override when it fetches `UI/Utils.lua`
+  on its own. Pin a version by swapping `main` for a commit SHA.
+- **Running it twice** stops the previous run (kept in `getgenv().AICSession`).
+- **If a module fails to load**, you'll see `LOAD FAILED  //  ...` on the loading
+  window.
 
-## Modules in this revision
+## Making it actually fight
 
-This revision explicitly separates the feature modules requested:
+The script attacks a guest list, and that list starts empty — so with no setup
+it moves and does nothing, silently. See **[QUICKSTART.md](QUICKSTART.md)** for
+the four steps that turn it on, and **[USAGE.md](USAGE.md)** for what every
+feature does, what it needs before it acts, and what its status line means.
 
-- AutoFarming.lua
-- AutoBlock.lua
-- AutoSmithing.lua (Crafting tab included; with SmithingRecipes.lua and SmithingMinigame.lua)
-- AutoPatrol.lua
-- ReturnToFarmZone.lua
-- IgnoreFarmZone.lua
-- AutoHeal.lua
-- AutoMining.lua (Mining tab controls included; with Minezone.lua and WalkController.lua)
-- AutoRefill.lua (Refill Booster: resets when a boost runs out)
-- SafeBoosterReset.lua
-- AntiAFK.lua
-- EnemyPriority.lua
-- AutoSkill.lua
-- AutoFind.lua
-- SafeCombat.lua
-- JumpWhileFighting.lua (Jump While Fighting: no jumping while chasing a target)
-- ResetStats.lua
-- DebugVisualizer.lua
-- Waypoints.lua
-- Farmzone.lua
-- Deadzone.lua
+## What's included
 
-Waypoints, Farmzone and Deadzone are spatial sections/modules and are not part of Profile Settings.
+The feature modules, roughly grouped:
 
-## Saved values and adding a feature
+- **Combat & farming** — AutoFarming, AutoBlock, SafeCombat, JumpWhileFighting,
+  AutoSkill, AutoFind, AutoPatrol, EnemyPriority, MobGather.
+- **Zones & movement** — Waypoints (+ WaypointLoop), Farmzone, Deadzone,
+  Minezone, WalkController, ReturnToFarmZone, IgnoreFarmZone, TeleportNavigate.
+- **Jobs** — AutoMining, AutoSmithing (with SmithingRecipes, SmithingMinigame,
+  SmithingBrowser, SmithingDetail).
+- **Support** — AutoHeal, AutoRefill (Refill Booster), SafeBoosterReset,
+  ResetStats, AntiAFK, FpsBoost, AutoStartGame, DebugVisualizer.
+- **Servers & players** — PartySystem, ServerHop, ServerUI, FollowerGuard,
+  QuestHelper/QuestAssign.
+- **Browsers & UI data** — MobBrowser, AssetBrowser, MobDictionary, AssetDictionary.
 
-`Core/SaveConfig.lua` declares everything a profile saves: `Features` lists every toggle (default and export key) and `Settings` lists every setting (default, range or options). Runtime, ProfileManager and the UI read from it, so nothing else needs editing to save, load, export or refresh a value.
+Waypoints, Farmzone and Deadzone are spatial modules and are not part of Profile
+Settings.
 
-To add a feature with a saved toggle:
+## Saved values
 
-1. Create `Features/MyFeature.lua` returning `{ Name = "MyFeature", Dependencies = {...}, Start = function(Context) ... end }`.
-2. Add `"Features/MyFeature.lua"` to `MODULES` in `Init.lua` (download list and start order).
-3. Add `{ Name = "MyFeature", Default = false, Key = "<unused letter>" }` to `SaveConfig.Features`.
-4. In `Start`, call `Context.AICUI.BindFeatureToggle("MyFeature", "My Feature", OnChanged)` and read `Context.Feature.MyFeature.Enabled`.
+`Core/SaveConfig.lua` is the single schema for everything a profile saves:
+`Features` lists every toggle (default and export key) and `Settings` lists every
+setting. Runtime, ProfileManager, and the UI all read from it, so adding an entry
+there is enough to save, load, export, and refresh a value — no other file needs
+touching.
 
-AutoSmithing implements crafting from the smithing proof of concept (CraftingStart + the strike minigame).
+## Adding a feature
 
-`Legacy/` contains the original reviewed files for comparison. `Core/Runtime.lua` is retained as a compatibility layer while the large legacy implementation is migrated feature-by-feature without silently inventing behavior.
+1. Create `Features/MyFeature.lua` returning
+   `{ Name = "MyFeature", Dependencies = {...}, Start = function(Context) ... end }`.
+2. Add `"Features/MyFeature.lua"` to `MODULES` in `Init.lua`.
+3. Add `{ Name = "MyFeature", Default = false, Key = "<unused letter>" }` to
+   `SaveConfig.Features`.
+4. In `Start`, call `Context.AICUI.BindFeatureToggle("MyFeature", "My Feature", OnChanged)`
+   and read `Context.Feature.MyFeature.Enabled`.
+
+`Core/Runtime.lua` is still a compatibility layer holding much of the original
+implementation; it is being split out feature-by-feature.
+

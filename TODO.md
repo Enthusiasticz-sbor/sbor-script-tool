@@ -414,6 +414,13 @@ were added.
 > - The old hold is kept as the fallback: if the kick itself fails, Auto Farm goes off and stays off until the Auto Farm toggle is clicked
 > - `FOLLOWER_RETRIP_COOLDOWN` (60 s) now only matters after a trip whose kick failed and fell back to the hold
 
+### [x] Repo: point the loader and README at the current repository
+
+> **Done (v3.28):** the script now downloads from `Enthusiasticzz/Autofarm-Script-Sbor`, and the README reads as a landing page
+> - `BASE` in `Init.lua` and the fallback in `Core/Runtime.lua` fetch from `Enthusiasticzz/Autofarm-Script-Sbor` (was `Enthusiasticz-sbor/sbor-script-tool`); the `getgenv().AICBaseURL` override is unchanged, so a fork or a pinned build still works
+> - The README loadstring and "download base" line use the new repository, and the feature list is grouped by area instead of a flat dump
+> - `AI-WALKTHROUGH.md` uses the new repository and records the standing rule to always commit and push every change
+
 ## To Fix
 
 ### [x] Waypoints Looped & Paired Farmzone/Waypoint/Targets: walking back to waypoints that are not paired
