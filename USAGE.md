@@ -15,22 +15,16 @@ any one is missing, **the loop returns without a word** — no error, no notice,
 no FARM STATE update. That is almost always why "toggling it on does nothing".
 
 1. **An executor, not Studio.** The script needs `loadstring`, `game:HttpGet` and
-   `getgenv`. In Studio the loader itself will not work.
-2. **The weapon must be worn, not in the backpack.** `Feature:Update` looks for a
-   child of your character named exactly `Sword` that contains a `MainWeld`, and it
-   reads `MainWeld.Part1` (which is `UpperTorso` while the sword is sheathed). There
-   is no code anywhere that equips a tool out of the Backpack: if the sword is not
-   already in the character the loop bails every frame. `(in-game check)` on the
-   exact name — if your weapon is called something else, nothing downstream runs.
-3. **`PlayerStats`** must exist under the local Player, and **`InputBindableFunction`**
+   `getgenv`.
+2. **`PlayerStats`** must exist under the local Player, and **`InputBindableFunction`**
    under PlayerGui. These are what the loop reads for level, stamina and the
    Equip/Interact presses.
-4. **A target list.** This is the one people miss. Auto Farm only attacks entities
+3. **A target list.** This is the one people miss. Auto Farm only attacks entities
    that are on the active target list — see *How Auto Farm decides what to do*
    below. With an empty list **no mob is ever a target**, and the farm stands still
    showing `IDLE (NO TARGET)`. Outside the two places that ship with a built-in
    target list (`10299594856` and `11987539001`), the list starts empty.
-5. **A profile, if you want to keep anything.** Waypoints, zones, ores and recipes
+4. **A profile, if you want to keep anything.** Waypoints, zones, ores and recipes
    are saved per profile, and profiles are stored per place
    (`AutoFarmProfiles/<PlaceId>.json`). Adding a waypoint or a zone with no profile
    loaded reports `CREATE / LOAD PROFILE FIRST` in the STATUS line, and the built-in
