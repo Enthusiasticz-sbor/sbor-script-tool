@@ -10,8 +10,6 @@ Four things, in this order, and it fights:
 
 Open **Profile Settings**, type a name in **Profile Name**, press **Create New Profile**.
 
-This is not optional bookkeeping — it is a hard requirement:
-
 > **Add Mob Target does nothing at all until a profile is loaded.** Picking a mob from the
 > dropdown with no profile loaded is silently ignored: the list stays empty, no message
 > appears. If you pick a mob and Enemy Priority stays empty, this is why.
@@ -20,13 +18,13 @@ This is not optional bookkeeping — it is a hard requirement:
 > warn you (`Load or create a profile first`). If the dictionary warns and the dropdown does
 > not, you are seeing exactly this.
 
-Profiles are stored **per game**. A profile you made in one place does not exist in another,
-so if you changed games you have to create one here too.
+Profiles are stored **per floor/place**. A profile you made in one place does not exist in another,
+so if you changed floors you have to create one there too.
 
 ## 2. Add the mobs you want it to attack
 
 Go to the **Farming** tab → **Targeting** → **Add Mob Target**, and pick every mob you want
-it to fight. Two or three is enough. Each pick is added to **Enemy Priority**.
+it to fight. Each pick is added to **Enemy Priority**.
 
 Two rules for the picker:
 
