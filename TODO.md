@@ -901,3 +901,13 @@ were added.
 > - The speed is dropped (`ForgetMover`) whenever the minigame window or its parts come and go (`Main` missing, the result shown, `ClickArea` / `Mover` / `Action` missing) and right after a strike, so a speed measured before the reset can no longer reach a check after it. Before, only the last position was cleared and the stale speed survived.
 > - The one-frame prediction for the synthetic click methods is unchanged, and now only ever runs on a speed measured from two consecutive frames of the current sweep.
 > - Assumption that needs checking in game: the mover keeps sweeping continuously between strikes.
+
+### [x] Auto Smithing: the strike is still pressed too early on the second strike
+
+> **Cause:** v3.26 stopped the speed being measured across the game's reset, but the strike was still *decided* at the band's leading edge: the check passed as soon as the mover's box touched `ClickArea` (plus 1 px) and, for the synthetic click methods, only the projection was used to reach it — so any error in the prediction (a speed a frame stale, a click the game handles a frame or two later, or a reset that lands a frame after the one that was skipped) put the press **before** the mover had arrived. The first strike survived it because it is judged from a sweep measured from its very beginning; the second one is the first that follows a reset, so it is the first that shows it. What the prediction should have aimed at is the band, not its edge.
+> **Fixed (v3.27):** `Features/SmithingMinigame.lua` no longer strikes at the edge of the band, and no projection can decide a strike on its own:
+> - Across the bar the mover's **centre** is what counts, not the edge that arrives first, so a press is never made before the mover is at the band.
+> - The centre has to be inside the band on the frame the strike is decided on **and** on the frame the click lands on (`Position + MoverVelocity * DeltaTime`). The 1 px of slack is given to the latter only, so it can no longer make a press early.
+> - This holds for every click method now instead of only the synthetic ones: `DIRECT_METHODS` is gone and a direct click (`firesignal` / `getconnections`) has to satisfy both checks as well, because the game can read the mover on its next step rather than in the frame the signal is fired.
+> - The v3.26 rule stands: the first frame after any gap only takes the sample, and `ForgetMover` drops the speed at a reset, so the projection a later frame uses is never measured across a reset.
+> - Assumptions that need checking in game: the band is wider than the distance the mover covers in two frames (a narrower one would skip a strike rather than press it early), and the mover's centre is what the game judges across the bar.
