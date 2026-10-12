@@ -6,16 +6,7 @@ no warning, no movement — which is why it looks broken.
 
 Four things, in this order, and it fights:
 
-## 1. Wear your sword
-
-The sword has to be **on your character** (drawn or sheathed, but equipped), not sitting in
-the Backpack. The script looks for a `Sword` tool inside your character with a `MainWeld`
-child, and refuses to do anything at all without it.
-
-Do this first, while the game is running. Nothing else will work if the sword is in the
-Backpack.
-
-## 2. Create a profile
+## 1. Create a profile
 
 Open **Profile Settings**, type a name in **Profile Name**, press **Create New Profile**.
 
@@ -32,7 +23,7 @@ This is not optional bookkeeping — it is a hard requirement:
 Profiles are stored **per game**. A profile you made in one place does not exist in another,
 so if you changed games you have to create one here too.
 
-## 3. Add the mobs you want it to attack
+## 2. Add the mobs you want it to attack
 
 Go to the **Farming** tab → **Targeting** → **Add Mob Target**, and pick every mob you want
 it to fight. Two or three is enough. Each pick is added to **Enemy Priority**.
@@ -49,7 +40,7 @@ with its **ADD TO ENEMY PRIORITY** button.
 You do not need a farm zone, waypoints, mining or crafting for this. Enemy Priority alone is
 enough for it to start fighting.
 
-## 4. Leave Auto Farm on and read FARM STATE
+## 3. Leave Auto Farm on and read FARM STATE
 
 **Auto Farm** is already on by default. Leave it on. Go to the **Status** tab and watch the
 `FARM STATE` line — that one line tells you whether it is working and, if not, why.
