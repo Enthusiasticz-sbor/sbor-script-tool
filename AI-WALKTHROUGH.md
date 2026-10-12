@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AI-WALKTHROUGH.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to LLM's or AI when working with code in this repository.
 
 ## What this is
 
