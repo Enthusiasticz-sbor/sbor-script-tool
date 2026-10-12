@@ -129,7 +129,7 @@ return {
             ["Add Material"] = "Adds a material to keep a reserve of",
 
             --// Status
-            ["Reset Stats"] = "Puts stat points below the limit back to 0",
+            ["Reset Stats"] = "Zeroes stats under 500 points; 500+ won't reset (trips the anticheat)",
             ["Reset Pinned Items Position"] = "Docks the Pinned Items panel back at the right",
 
             --// Profile

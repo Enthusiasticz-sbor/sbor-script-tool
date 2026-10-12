@@ -421,6 +421,13 @@ were added.
 > - The README loadstring and "download base" line use the new repository, and the feature list is grouped by area instead of a flat dump
 > - `AI-WALKTHROUGH.md` uses the new repository and records the standing rule to always commit and push every change
 
+### [x] Reset Stats: explain why 500+ is refused (anticheat)
+
+> **Done (v3.29):** the Reset Stats note now says the real reason a stat at or above the limit cannot be reset
+> - The button's description (`UI/Descriptions.lua`) reads "Zeroes stats under 500 points; 500+ won't reset (trips the anticheat)" instead of the old "Puts stat points below the limit back to 0"
+> - The on-screen refusal (`Features/ResetStats.lua`) now says the points trip the game anticheat, instead of the old wording that implied it was refused only to avoid wiping points by accident
+> - `STAT_RESET_THRESHOLD` is unchanged at 500; only the wording changed. `USAGE.md` was corrected to match
+
 ## To Fix
 
 ### [x] Waypoints Looped & Paired Farmzone/Waypoint/Targets: walking back to waypoints that are not paired

@@ -37,7 +37,7 @@ return {
                             if StatValue.Value < CONFIG.STAT_RESET_THRESHOLD then
                                 StatsEvent:FireServer(StatName, 0)
                             else
-                                NotifyAction("RESET STATS", `Cannot reset "{StatName}" exceeded {CONFIG.STAT_RESET_THRESHOLD}.`)
+                                NotifyAction("RESET STATS", `Cannot reset "{StatName}": {CONFIG.STAT_RESET_THRESHOLD}+ invested points trip the game anticheat.`)
                             end
                         end
                     end)
