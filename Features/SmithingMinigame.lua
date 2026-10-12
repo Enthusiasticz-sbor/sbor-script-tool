@@ -8,6 +8,12 @@
 -- game's handler in the same frame, so it strikes on the current overlap. A
 -- synthetic click lands a frame later, so for those the overlap is checked
 -- where Mover will be by then, from its speed.
+--
+-- The speed is only ever measured between two frames of the same sweep. The
+-- game resets Mover for the next strike, so the frame just before and the
+-- frame just after a strike (or after the minigame window comes and goes) are
+-- not two samples of one movement: the reset itself would read as speed and
+-- the next strike would be pressed early. Those frames only take the sample.
 return {
     Name = "SmithingMinigame",
     Dependencies = {"Runtime", "GuiClick"},
@@ -77,11 +83,20 @@ return {
                 and APosition.Y + ASize.Y + STRIKE_PADDING > BPosition.Y
         end
 
+        --// Forgets the mover's motion. Used wherever the next frame is not
+        --// the continuation of the last one: the round ended, the minigame
+        --// window came or went, or a strike was just pressed and the game is
+        --// resetting the mover for the next strike.
+        local function ForgetMover()
+            S.LastMoverPosition = nil
+            S.MoverVelocity = Vector2.zero
+        end
+
         local function Step(DeltaTime)
             local Main = Minigame:Find()
 
             if not Main or Minigame:GetResult(Main) then
-                S.LastMoverPosition = nil
+                ForgetMover()
                 return
             end
 
@@ -90,16 +105,23 @@ return {
             local Action = Main:FindFirstChild("Action")
 
             if not ClickArea or not Mover or not Action then
+                ForgetMover()
                 return
             end
 
             local Position = Mover.AbsolutePosition
+            local Previous = S.LastMoverPosition
+            S.LastMoverPosition = Position
 
-            if S.LastMoverPosition and DeltaTime > 0 then
-                S.MoverVelocity = (Position - S.LastMoverPosition) / DeltaTime
+            --// Without a frame before it there is no movement to measure, so
+            --// this frame only takes the sample, and never strikes: it may be
+            --// the frame the mover was reset on.
+            if not Previous or DeltaTime <= 0 then
+                S.MoverVelocity = Vector2.zero
+                return
             end
 
-            S.LastMoverPosition = Position
+            S.MoverVelocity = (Position - Previous) / DeltaTime
 
             local now = os.clock()
 
@@ -125,6 +147,10 @@ return {
                 S.Method = Method
                 S.Strikes += 1
             end
+
+            --// The next strike is measured from the next strike's mover, not
+            --// from the movement of the one just struck.
+            ForgetMover()
         end
 
         --// Starts playing; idempotent. Runs on RenderStepped, where the GUI

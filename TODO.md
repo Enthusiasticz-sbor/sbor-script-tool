@@ -892,3 +892,12 @@ were added.
 > - New toggle **Jump While Fighting** (Farming tab, saved in the profile, default **off**). Off, nothing that moves the character towards, away from or around a target leaves the ground: the chase (`ChaseMoveTo` / path follow), its sidestep and stuck recovery, the retreat and the swim chase all go through `CombatUtils.DoCombatJump` / `DoCombatJumpIfObstacle`.
 > - The waypoint route (route holes and ticked Jump waypoints), Waypoint Loop, patrol, mining and smithing keep their own jumps, and so does the return-to-zone walker: a parkour gap is still cleared on the route with the toggle off.
 > - `CombatUtils.IsJumpableObstacleAhead` no longer reads a character as terrain: each raycast hit is checked by walking its ancestors for a `Humanoid`, so a mob or a player is never a ledge to hop over nor a step to climb, whatever folder the game keeps it in.
+
+### [x] Auto Smithing: the strike is pressed too early on the second strike
+
+> **Cause:** the mover's speed was measured between every pair of rendered frames, including the pair that straddles a strike: the game resets the mover for the next strike, so the reset itself read as a speed several times the real one. A synthetic click (`VirtualInputManager` / real mouse, the fallback when the executor has no `firesignal`) checks where the mover will be one frame later, so that phantom speed threw the check past the band and the next strike was pressed early — while the first strike stayed clean, because it is judged from the sweep that led into it.
+> **Fixed (v3.26):** `Features/SmithingMinigame.lua` now only measures the mover between two frames of the **same** sweep.
+> - The frame on which the mover is first seen after a gap — the minigame opened, the round ended, the strike button came back, or a strike was just pressed — only takes the sample and never strikes: it may be the frame the game reset the mover on.
+> - The speed is dropped (`ForgetMover`) whenever the minigame window or its parts come and go (`Main` missing, the result shown, `ClickArea` / `Mover` / `Action` missing) and right after a strike, so a speed measured before the reset can no longer reach a check after it. Before, only the last position was cleared and the stale speed survived.
+> - The one-frame prediction for the synthetic click methods is unchanged, and now only ever runs on a speed measured from two consecutive frames of the current sweep.
+> - Assumption that needs checking in game: the mover keeps sweeping continuously between strikes.
