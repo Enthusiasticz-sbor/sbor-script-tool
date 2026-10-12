@@ -21,8 +21,6 @@ Behind the scenes it fetches `UI/Utils.lua` plus the 62 modules in `MODULES`
 (63 requests), compiles them, and starts them in dependency order. It needs an
 executor (`loadstring`, `game:HttpGet`, `LocalPlayer`/`PlayerGui`).
 
-**Roblox Studio:** keep `Init` as a ModuleScript and it `require`s the sibling
-modules locally — no HTTP at all.
 
 ### Options
 
